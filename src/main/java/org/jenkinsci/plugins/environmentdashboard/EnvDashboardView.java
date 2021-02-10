@@ -1453,6 +1453,7 @@ public class EnvDashboardView extends View {
 		String activeDB = null;
 		String provEnv = null;
 		String activeServer = null;
+		String currentInstanceType = null;
 
 		System.out.println(getCurentDateTime() + ": At getActiveDBprovEnvAndServerSQLquery function");
 
@@ -1523,7 +1524,25 @@ public class EnvDashboardView extends View {
 			
 		}
 		
-		returnString = activeDB + "," + provEnv + "," + activeServer;
+		//identify instance type
+		SQL = "use " + getOpsDB() + ";\n" +
+		"select instance_type from dbo.[server] where name = '" + activeServer + "';";
+
+		returnValue = getRequestedInfo(customer, env, SQL, "instance_type");
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			currentInstanceType = returnValue;
+			//System.out.println(currentInstanceType);
+			
+		}
+		
+		returnString = activeDB + "," + provEnv + "," + activeServer + "," + currentInstanceType;
 		
 		return returnString;
 	
@@ -1735,6 +1754,8 @@ public class EnvDashboardView extends View {
 	   String activeDB = null;
 	   String provEnv = null;
 	   String activeServer = null;
+	   String currentInstanceType = null;
+	   String currentInstanceTypeFamily = null;
 		
 	   System.out.println(getCurentDateTime() + ": At getNightlyjobStepsSQLquery function");
 	   
@@ -1761,6 +1782,12 @@ public class EnvDashboardView extends View {
 			activeServer = arrOfStr[2];
 			System.out.println(activeServer);
 			
+			currentInstanceType = arrOfStr[3];
+			System.out.println(currentInstanceType);
+			
+			currentInstanceTypeFamily = arrOfStr[3].split("\\.")[0];
+			System.out.println(currentInstanceTypeFamily);
+			
 		}
 			
 	  
@@ -1784,6 +1811,9 @@ public class EnvDashboardView extends View {
        Connection conn = null;
        Statement stat = null;
 	   
+	   Connection conn2 = null;
+	   Statement stat2 = null;
+	   
 	   String NightlyJobSteps = new String();
 	   String NightlyJobInfo = new String();
 	   String retrievedJob = null;
@@ -1804,9 +1834,7 @@ public class EnvDashboardView extends View {
 	   //String SQL = "select customerid, name from customers where name = 'orlando';";
 	   
 	   
-	   
-	   
-       try 
+	   try 
 	   {
            if (conn == null){throw new Exception("Failed to create connection to database");};
            stat = conn.createStatement();
@@ -1821,6 +1849,55 @@ public class EnvDashboardView extends View {
 
        }
 	   
+	   //Get available instance types for a particular instance family
+	   String opsdbServer = getOpsDBinstance();
+		//Check if server is reachable
+		if (!testServerConnection(opsdbServer))
+		{
+			error = "failed " + opsdbServer + " is not reachable";
+			System.out.println(getCurentDateTime() + ": " + error);
+			returnString = error;
+			return returnString;
+		}
+
+		conn2 = CustomDBConnection.getConnection(opsdbServer, getOpsDBinstancePort(), "placeholderForDB", getdbUser(), getdbPassword(), getSQLauth());
+		String SQL2 = "use " + getOpsDB() + ";\n" +
+		"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%';";
+
+		/*
+		returnValue = getRequestedInfo(customer, env, SQL, "instance_type");
+		
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			currentInstanceType = returnValue;
+			//System.out.println(currentInstanceType);
+			
+		}
+	    */
+		
+	   
+		   try 
+		   {
+			   if (conn2 == null){throw new Exception("Failed to create connection to database");};
+			   stat2 = conn2.createStatement();
+		   } 
+		   catch (Exception e)
+		   {
+			   error = "E13" + " failed " + e.getMessage();
+			   System.out.println(error);
+			   
+			   returnString = error;
+			   return returnString;
+
+		   }
+
+	   
 	   
        try 
 	   {
@@ -1829,6 +1906,8 @@ public class EnvDashboardView extends View {
 		   JsonArrayBuilder jarr = Json.createArrayBuilder();
 		   JsonArray arr = null;
 		   JsonObject joSteps = null;
+		   JsonObject joCurrentInstanceType = null;
+		   JsonObject joInstanceTypes = null;
 		   JsonObject joInfo = null;
 		   JsonObject joInfoStart = null;
 		   Date next_run_date_time_for_conv = null;
@@ -2128,6 +2207,34 @@ public class EnvDashboardView extends View {
 			   joInfoStart = Json.createObjectBuilder().add("infoStart", arr).build();
 			   //System.out.println(joInfoStart);
 				
+				
+			    //Get current instance type
+				jarr.add(Json.createObjectBuilder()
+					  .add("current_instance_type", currentInstanceType)
+				  .build());
+				
+
+				arr = jarr.build();
+				joCurrentInstanceType = Json.createObjectBuilder().add("currentinstancetype", arr).build();
+				System.out.println(joCurrentInstanceType);
+				
+				
+			   //Get available instance types
+				System.out.println(getCurentDateTime() + ": About to execute SQL query for retrieving instance types...");
+				rs = stat2.executeQuery(SQL2);
+
+				while (rs.next()) {
+					
+					jarr.add(Json.createObjectBuilder()
+						  .add("instance_type", rs.getString("instance_type"))
+					  .build());
+				}
+
+				arr = jarr.build();
+				joInstanceTypes = Json.createObjectBuilder().add("instancetypes", arr).build();
+				System.out.println(joInstanceTypes);
+				
+				
 				//Combine three json objects
 			   JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
 
@@ -2139,6 +2246,12 @@ public class EnvDashboardView extends View {
 				}
 				for (String key : joInfoStart.keySet()) {
 					jsonObjectBuilder.add(key, joInfoStart.get(key));
+				}
+				for (String key : joCurrentInstanceType.keySet()) {
+					jsonObjectBuilder.add(key, joCurrentInstanceType.get(key));
+				}
+			    for (String key : joInstanceTypes.keySet()) {
+					jsonObjectBuilder.add(key, joInstanceTypes.get(key));
 				}
 				 
 				JsonObject combinedStepsAndInfoAndInfoStart = jsonObjectBuilder.build();
@@ -2317,8 +2430,8 @@ public class EnvDashboardView extends View {
 	
 	public String getOpsDB()
 	{
-		//String db = "opsdb_dev";
-		String db = "opsdb";
+		String db = "opsdb_dev";
+		//String db = "opsdb";
 		return db;
     }
 	

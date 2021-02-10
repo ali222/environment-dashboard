@@ -553,7 +553,7 @@ function showDashboard() {
 							}, 300 * 1000); // 5 minutes
 							
 							
-							Q("#overlay, #dialog, #dialog2, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
+							Q("#overlay, #dialog, #dialog2, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
 							Q("#dialog").draggable();
 							
 							Q("#dialog3").dialog({
@@ -869,6 +869,17 @@ function showDashboard() {
 											return Q.trim(value);
 										}
 									},
+									futureinstancetype: {
+										required: true,
+										// Using the normalizer to trim the value of the element
+										// before validating it.
+										//
+										// The value of `this` inside the `normalizer` is the corresponding
+										// DOMElement. In this example, `this` references the `username` element.
+										normalizer: function(value) {
+											return Q.trim(value);
+										}
+									},
 									njStartStepDecision: {
 										required: true
 									},
@@ -1042,6 +1053,7 @@ function showDashboard() {
 										remote: "please enter the date and time into the future"
 									},
 									njstartstep: "please enter name of the step",
+									futureinstancetype: "choose...",
 									EnvDecision: "please make a choice"
 								},
 								errorPlacement: function(error, element) {
@@ -1685,6 +1697,19 @@ function showDashboard() {
 								
 							});
 							
+							Q("#resize").change(function(){
+								if(this.checked) 
+								{
+									Q("#new-instance-type-selection").show();
+									
+								}
+								else
+								{
+									Q("#new-instance-type-selection").hide();
+								}
+								
+							});
+							
 							Q("#njStartStepDecision").change(ChecknjStartStepDecision);
 							
 							
@@ -1882,7 +1907,7 @@ function showDashboard() {
 							
 							if (typeOfAction == "close")
 							{
-								Q("#overlay, #dialog, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
+								Q("#overlay, #dialog, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
 								Q("#buildNumber").val("");
 								Q("#core_version").val("");
 								Q("#build_num").val("");
@@ -2599,6 +2624,13 @@ function showDashboard() {
 						
 						}
 						
+						
+						function getCurrentAndAvailableInstanceTypes()
+						{
+						
+						
+						}
+						
 						function getNightlyjobSteps()
 						{
 						
@@ -2678,7 +2710,7 @@ function showDashboard() {
 										 //console.log(response6);
 										 //console.log("About to populate the array...");
 										 
-										 //Initialize
+										 //Initialize for NJ steps
 										 Q("#njstartstep").val("");
 										 var availableNJsteps = [];
 										 
@@ -2702,6 +2734,52 @@ function showDashboard() {
 										Q("#njstartstep").focus(function (){
 										  Q("#njstartstep").autocomplete( "search", "" );
 										});
+										
+										
+										//Initialize for current instance type
+										 Q("#currentinstancetype").val("");
+										 var currentInstanceType = [];
+										 
+										 Q.each(stepsjobject2.currentinstancetype, function(index, element){
+											//console.log(element.current_instance_type); 
+										 
+											 currentInstanceType.push(element.current_instance_type);
+											 
+										 });
+										 
+										 Q("#currentinstancetype").val(currentInstanceType[0]);
+										 
+										//console.log("Finished populating the array");
+										//console.log(currentInstanceType);
+										 
+										
+										
+										
+										
+										//Initialize for instance types
+										 Q("#futureinstancetype").val("");
+										 var availableInstanceTypes = [];
+										 
+										 Q.each(stepsjobject2.instancetypes, function(index, element){
+											//console.log(element.instance_type); 
+										 
+											 availableInstanceTypes.push(element.instance_type);
+											 
+										 });
+										 
+										//console.log("Finished populating the array");
+										//console.log(availableInstanceTypes);
+										 
+										Q("#futureinstancetype").autocomplete({
+										  source: availableInstanceTypes,
+										  minLength: 0
+										}); 
+										
+										
+										Q("#futureinstancetype").focus(function (){
+										  Q("#futureinstancetype").autocomplete( "search", "" );
+										});
+										
 										
 										 
 										 //Get information on the nightly job start
@@ -3319,6 +3397,19 @@ function showDashboard() {
 	<input type="checkbox" id="runqascript"></input>
 	<label for="runqascript"> Run QA SQL script</label>
 	</div>
+	
+	<input type="checkbox" id="resize"></input>
+	<label id="resizelabel" for="resize"> Resize server</label><br></br>
+
+	<div id="new-instance-type-selection" style="text-align: left">
+		<div class="divider"/>
+		<label id="currentinstancetypeLabel">Current instance type</label>
+			<div class="divider"/><input type="text" id="currentinstancetype" name="currentinstancetype" size="15" readonly="readonly"/>
+		<div class="divider"/>
+		<label id="futureinstancetypeLabel">Available instance types</label>
+			<div class="divider"/><input type="text" id="futureinstancetype" name="futureinstancetype" size="15"/>
+	</div>
+	
 	
 	<!--
 	<div id="BackendDeploySection">
