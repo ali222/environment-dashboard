@@ -1756,6 +1756,8 @@ public class EnvDashboardView extends View {
 	   String activeServer = null;
 	   String currentInstanceType = null;
 	   String currentInstanceTypeFamily = null;
+	   int numOfActiveEnvs = 0;
+	   boolean resizeServer = false;
 		
 	   System.out.println(getCurentDateTime() + ": At getNightlyjobStepsSQLquery function");
 	   
@@ -1864,8 +1866,34 @@ public class EnvDashboardView extends View {
 		String SQL2 = "use " + getOpsDB() + ";\n" +
 		"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%';";
 
-		/*
-		returnValue = getRequestedInfo(customer, env, SQL, "instance_type");
+	   try 
+	   {
+		   if (conn2 == null){throw new Exception("Failed to create connection to database");};
+		   stat2 = conn2.createStatement();
+	   } 
+	   catch (Exception e)
+	   {
+		   error = "E13" + " failed " + e.getMessage();
+		   System.out.println(error);
+		   
+		   returnString = error;
+		   return returnString;
+
+	   }
+
+		System.out.println(getCurentDateTime() + ": Checking how many active deployment environments exist at " + activeServer + " server...");
+		String SQL3 = "select count(*) as 'numOfActiveEnvs'\n" +
+            "	from dbo.[database] d inner join dbo.client c on d.client_id = c.client_id\n" +
+            "	inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
+            "	inner join dbo.environment e on e.environment_id = p.environment_id\n" +
+            "	inner join dbo.type t on t.type_id = d.type_id\n" +
+            "	inner join dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
+            "	inner join dbo.db_instance di on dbi.db_instance_id = di.db_instance_id\n" +
+            "	inner join dbo.status s on s.status_id = dbi.status_id\n" +
+            "       where t.name in ('WAREHOUSE') and s.name not in ('Decomissioned', 'Dropped')\n" +
+            "       and di.name = '" + activeServer + "' and s.name = 'Active'";
+		
+		returnValue = getRequestedInfo(customer, env, SQL3, "numOfActiveEnvs");
 		
 		if(returnValue.contains("failed"))
 		{
@@ -1875,28 +1903,16 @@ public class EnvDashboardView extends View {
 		}
 		else
 		{
-			currentInstanceType = returnValue;
-			//System.out.println(currentInstanceType);
+			numOfActiveEnvs = Integer.parseInt(returnValue);
+			System.out.println(numOfActiveEnvs);
+			
+			if(numOfActiveEnvs == 1)
+			{
+				resizeServer = true;
+			}
 			
 		}
-	    */
-		
-	   
-		   try 
-		   {
-			   if (conn2 == null){throw new Exception("Failed to create connection to database");};
-			   stat2 = conn2.createStatement();
-		   } 
-		   catch (Exception e)
-		   {
-			   error = "E13" + " failed " + e.getMessage();
-			   System.out.println(error);
-			   
-			   returnString = error;
-			   return returnString;
-
-		   }
-
+	    
 	   
 	   
        try 
@@ -1906,6 +1922,7 @@ public class EnvDashboardView extends View {
 		   JsonArrayBuilder jarr = Json.createArrayBuilder();
 		   JsonArray arr = null;
 		   JsonObject joSteps = null;
+		   JsonObject joResizeServer = null;
 		   JsonObject joCurrentInstanceType = null;
 		   JsonObject joInstanceTypes = null;
 		   JsonObject joInfo = null;
@@ -2208,12 +2225,24 @@ public class EnvDashboardView extends View {
 			   //System.out.println(joInfoStart);
 				
 				
+				//Identify whether server resize is qualified
+				System.out.println(getCurentDateTime() + ": Check whether server resize is qualified...");				
+				jarr.add(Json.createObjectBuilder()
+					  .add("resize_server", resizeServer)
+				  .build());
+				
+				arr = jarr.build();
+				joResizeServer = Json.createObjectBuilder().add("resizeserver", arr).build();
+				System.out.println(joResizeServer);
+				
+				
+				
 			    //Get current instance type
+				System.out.println(getCurentDateTime() + ": Check current instance type...");
 				jarr.add(Json.createObjectBuilder()
 					  .add("current_instance_type", currentInstanceType)
 				  .build());
 				
-
 				arr = jarr.build();
 				joCurrentInstanceType = Json.createObjectBuilder().add("currentinstancetype", arr).build();
 				System.out.println(joCurrentInstanceType);
@@ -2235,7 +2264,7 @@ public class EnvDashboardView extends View {
 				System.out.println(joInstanceTypes);
 				
 				
-				//Combine three json objects
+				//Combine six json objects
 			   JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
 
 				for (String key : joSteps.keySet()) {
@@ -2246,6 +2275,9 @@ public class EnvDashboardView extends View {
 				}
 				for (String key : joInfoStart.keySet()) {
 					jsonObjectBuilder.add(key, joInfoStart.get(key));
+				}
+				for (String key : joResizeServer.keySet()) {
+					jsonObjectBuilder.add(key, joResizeServer.get(key));
 				}
 				for (String key : joCurrentInstanceType.keySet()) {
 					jsonObjectBuilder.add(key, joCurrentInstanceType.get(key));

@@ -521,6 +521,7 @@ function showDashboard() {
 						var typeofDeployment;
 						var CRjob;
 						var CRjobstepActionType;
+						var serverResizeQualified = false;
 						
 						//Create a proxy for EnvDashView Java object on a server side so it can later be used during AJAX calls
 						var EnvDashViewProxy;
@@ -2736,50 +2737,44 @@ function showDashboard() {
 										});
 										
 										
-										//Initialize for current instance type
-										 Q("#currentinstancetype").val("");
-										 var currentInstanceType = [];
+										//Identify whether server resize can be done on the server
+										 console.log(stepsjobject2.resizeserver[0].resize_server);
+										 serverResizeQualified = stepsjobject2.resizeserver[0].resize_server;
+										 if (serverResizeQualified)
+										 {
 										 
-										 Q.each(stepsjobject2.currentinstancetype, function(index, element){
-											//console.log(element.current_instance_type); 
-										 
-											 currentInstanceType.push(element.current_instance_type);
+											//Initialize for current instance type
+											 Q("#currentinstancetype").val("");
+											 //console.log(stepsjobject2.currentinstancetype[0].current_instance_type);
+											 Q("#currentinstancetype").val(stepsjobject2.currentinstancetype[0].current_instance_type);
 											 
-										 });
-										 
-										 Q("#currentinstancetype").val(currentInstanceType[0]);
-										 
-										//console.log("Finished populating the array");
-										//console.log(currentInstanceType);
-										 
-										
-										
-										
-										
-										//Initialize for instance types
-										 Q("#futureinstancetype").val("");
-										 var availableInstanceTypes = [];
-										 
-										 Q.each(stepsjobject2.instancetypes, function(index, element){
-											//console.log(element.instance_type); 
-										 
-											 availableInstanceTypes.push(element.instance_type);
+											
+											//Initialize for instance types
+											 Q("#futureinstancetype").val("");
+											 var availableInstanceTypes = [];
 											 
-										 });
-										 
-										//console.log("Finished populating the array");
-										//console.log(availableInstanceTypes);
-										 
-										Q("#futureinstancetype").autocomplete({
-										  source: availableInstanceTypes,
-										  minLength: 0
-										}); 
-										
-										
-										Q("#futureinstancetype").focus(function (){
-										  Q("#futureinstancetype").autocomplete( "search", "" );
-										});
-										
+											 Q.each(stepsjobject2.instancetypes, function(index, element){
+												//console.log(element.instance_type); 
+											 
+												 availableInstanceTypes.push(element.instance_type);
+												 
+											 });
+											 
+											//console.log("Finished populating the array");
+											//console.log(availableInstanceTypes);
+											 
+											Q("#futureinstancetype").autocomplete({
+											  source: availableInstanceTypes,
+											  minLength: 0
+											}); 
+											
+											
+											Q("#futureinstancetype").focus(function (){
+											  Q("#futureinstancetype").autocomplete( "search", "" );
+											});
+											
+										 }
+
 										
 										 
 										 //Get information on the nightly job start
