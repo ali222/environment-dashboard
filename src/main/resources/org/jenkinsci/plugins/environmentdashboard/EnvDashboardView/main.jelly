@@ -554,7 +554,7 @@ function showDashboard() {
 							}, 300 * 1000); // 5 minutes
 							
 							
-							Q("#overlay, #dialog, #dialog2, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
+							Q("#overlay, #dialog, #dialog2, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #resizeServerSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
 							Q("#dialog").draggable();
 							
 							Q("#dialog3").dialog({
@@ -1922,6 +1922,7 @@ function showDashboard() {
 								Q("#startnjlabel").show();
 								Q("#noRollbackSection").show();
 								Q("#runQASQLscriptSection").show();
+								Q("#resizeServerSection").show();
 
 							}
 							else
@@ -1971,7 +1972,7 @@ function showDashboard() {
 								if(Q("#envSection").is(":visible"))
 								{
 									Q("#PRDsection").hide(500);
-									Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection").hide();
+									Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection, #resizeServerSection").hide();
 									Q("#kickoffDateTimeSection").hide();
 								}
 								
@@ -2128,6 +2129,8 @@ function showDashboard() {
 									 Q("#dialog2").dialog("option","title",CRjob);
 									 
 									 getNightlyjobSteps();
+									 
+									 
 								 }
 
 								 
@@ -2207,7 +2210,7 @@ function showDashboard() {
 							else
 							{
 								Q("#PRDsection").hide(500);
-								Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection").hide();
+								Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection, #resizeServerSection").hide();
 								Q("#kickoffDateTimeSection").hide();
 								Q("#schedActivitySection").hide();
 								
@@ -2281,6 +2284,7 @@ function showDashboard() {
 										
 										 Q("#noRollbackSection").hide();
 										 Q("#runQASQLscriptSection").hide();
+										 Q("#resizeServerSection").hide();
 										 Q("#envSection").show();
 										 Q("#dialogTitle").text("Deploying " + comp + " for " + buildNum);
 										 Q("#dialogTitle").css("background-color", "#81BEF7");
@@ -2490,6 +2494,7 @@ function showDashboard() {
 									Q("#startnjlabel").hide();
 									Q("#noRollbackSection").hide();
 									Q("#runQASQLscriptSection").hide();
+									Q("#resizeServerSection").hide();
 									Q("#binderyfrontend-versions").hide();
 									Q("#current-bindery-frontend-version").hide();
 									
@@ -2628,7 +2633,7 @@ function showDashboard() {
 						
 						function getCurrentAndAvailableInstanceTypes()
 						{
-						
+							//something to do here
 						
 						}
 						
@@ -2738,7 +2743,7 @@ function showDashboard() {
 										
 										
 										//Identify whether server resize can be done on the server
-										 console.log(stepsjobject2.resizeserver[0].resize_server);
+										 //console.log(stepsjobject2.resizeserver[0].resize_server);
 										 serverResizeQualified = stepsjobject2.resizeserver[0].resize_server;
 										 if (serverResizeQualified)
 										 {
@@ -2773,6 +2778,12 @@ function showDashboard() {
 											  Q("#futureinstancetype").autocomplete( "search", "" );
 											});
 											
+											
+											Q("#resizeServerSection").show();
+										 }
+										 else
+										 {
+											Q("#resizeServerSection").hide();
 										 }
 
 										
@@ -2844,7 +2855,7 @@ function showDashboard() {
 										Q("#dialogTitle").text("Change request " + Q("#clientAcronym").val() + " to " + Q("#environment").val() + " &#x2192; " + Q("#activeServer").val());
 										Q("#dialogTitle").css("background-color", "#81BEF7");
 
-										Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection").hide();
+										Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection, #resizeServerSection").hide();
 										Q("#prd-env-cr-job").show();
 										Q("#datetimepickerLabel").text("Change Request job kick off date and time");
 
@@ -2868,6 +2879,8 @@ function showDashboard() {
 											}
 											
 											Q("#runQASQLscriptSection").show();
+											
+											//Q("#resizeServerSection").show();
 										}
 										else
 										{
@@ -2875,6 +2888,8 @@ function showDashboard() {
 											Q("#dialogTitle").css("background-color", "#81BEF7");
 											
 											Q("#runQASQLscriptSection").hide();
+											Q("#resizeServerSection").hide();
+											
 										}
 										
 									}
@@ -3393,11 +3408,15 @@ function showDashboard() {
 	<label for="runqascript"> Run QA SQL script</label>
 	</div>
 	
+	<div id="resizeServerSection">
 	<input type="checkbox" id="resize"></input>
-	<label id="resizelabel" for="resize"> Resize server</label><br></br>
-
+	<label for="resize"> Resize server</label>
+	</div>
+	
+	<br></br>
+	
 	<div id="new-instance-type-selection" style="text-align: left">
-		<div class="divider"/>
+		<div class="divider"/><div class="divider"/>
 		<label id="currentinstancetypeLabel">Current instance type</label>
 			<div class="divider"/><input type="text" id="currentinstancetype" name="currentinstancetype" size="15" readonly="readonly"/>
 		<div class="divider"/>
