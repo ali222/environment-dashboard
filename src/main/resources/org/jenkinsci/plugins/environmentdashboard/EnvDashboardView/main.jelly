@@ -522,6 +522,7 @@ function showDashboard() {
 						var CRjob;
 						var CRjobstepActionType;
 						var serverResizeQualified = false;
+						var currentInstanceType;
 						
 						//Create a proxy for EnvDashView Java object on a server side so it can later be used during AJAX calls
 						var EnvDashViewProxy;
@@ -1701,6 +1702,7 @@ function showDashboard() {
 							Q("#resize").change(function(){
 								if(this.checked) 
 								{
+									Q("#currentinstancetype").val(currentInstanceType);
 									Q("#new-instance-type-selection").show();
 									
 								}
@@ -1955,6 +1957,7 @@ function showDashboard() {
 								{
 									Q("#buildNumber").val("");
 									Q("#build_num").val("");
+									Q("#new-instance-type-selection").hide();
 								
 								}
 								else
@@ -2751,6 +2754,9 @@ function showDashboard() {
 											//Initialize for current instance type
 											 Q("#currentinstancetype").val("");
 											 //console.log(stepsjobject2.currentinstancetype[0].current_instance_type);
+											 
+											 currentInstanceType = stepsjobject2.currentinstancetype[0].current_instance_type;
+											 
 											 Q("#currentinstancetype").val(stepsjobject2.currentinstancetype[0].current_instance_type);
 											 
 											
@@ -3412,8 +3418,6 @@ function showDashboard() {
 	<input type="checkbox" id="resize"></input>
 	<label for="resize"> Resize server</label>
 	</div>
-	
-	<br></br>
 	
 	<div id="new-instance-type-selection" style="text-align: left">
 		<div class="divider"/><div class="divider"/>

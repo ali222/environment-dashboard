@@ -1864,8 +1864,9 @@ public class EnvDashboardView extends View {
 
 		conn2 = CustomDBConnection.getConnection(opsdbServer, getOpsDBinstancePort(), "placeholderForDB", getdbUser(), getdbPassword(), getSQLauth());
 		String SQL2 = "use " + getOpsDB() + ";\n" +
-		"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%';";
-
+		//"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%';";
+		"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%' and instance_type <> '" + currentInstanceType + "' order by instance_type desc;";
+		
 	   try 
 	   {
 		   if (conn2 == null){throw new Exception("Failed to create connection to database");};
