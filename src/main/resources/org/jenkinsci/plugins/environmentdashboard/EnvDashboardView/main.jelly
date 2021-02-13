@@ -1709,6 +1709,12 @@ function showDashboard() {
 							Q("#resize").change(function(){
 								if(this.checked) 
 								{
+								
+									Q("#dialog3").dialog("option","title","Warning");
+									Q("#dialog3text").text("Please keep in mind that that server will be resized before deployment starts and once the deployment session (once CR and/or NJ complete(s) their/its run(s) if asked to run after deployment succeeds) ends. Each time server gets resized, the backend server will be rebooted which will bring the frontend (client's portal) down.");
+									Q("#dialog3").dialog("open");
+
+								
 									Q("#currentinstancetype").val(currentInstanceType);
 									Q("#new-instance-type-selection").show();
 									
@@ -3085,7 +3091,7 @@ function showDashboard() {
 							}
 							
 							//debug the URL
-							
+							/*
 							var str = buildUrl;
 							splitString = str.split("&amp;");
 							var parsedBuildUrl = "";
@@ -3095,8 +3101,8 @@ function showDashboard() {
 							});
 
 							console.log(parsedBuildUrl);
-							
-							
+							alert('hello'); //for the sake of checking parsedBuildUrl in the console before the web page reloads
+							*/
 							
 							CloseResetDynamicDialog("close");
 							xmlHttp.open("POST", buildUrl, true); // true for asynchronous 
@@ -3431,7 +3437,7 @@ function showDashboard() {
 	
 	<div id="resizeServerSection">
 	<input type="checkbox" id="resize"></input>
-	<label for="resize"> Resize server</label>
+	<label for="resize"> Resize backend server</label>
 	</div>
 	
 	<div id="new-instance-type-selection" style="text-align: left">
