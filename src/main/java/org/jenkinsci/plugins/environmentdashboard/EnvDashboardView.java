@@ -1568,15 +1568,15 @@ public class EnvDashboardView extends View {
 		"from (\n" +
 		"select d.version as 'web_version', d.client_revision as 'binderyfrontend_version',\n" +
 		"		RANK() OVER (PARTITION BY c.acronym, e.name, p.name, di.name, t.name ORDER BY d.start_timestamp DESC) AS Rank\n" +
-		"                                         from OpsDB.dbo.deployment d inner join OpsDB.dbo.status s on d.status_id = s.status_id \n" +
-		"                                                                     inner join OpsDB.dbo.client c on d.client_id = c.client_id\n" +
-		"                                                                     inner join OpsDB.dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
-		"																	 inner join OpsDB.dbo.environment e on e.environment_id = p.environment_id\n" +
-		"                                                                     inner join OpsDB.dbo.db_instance di on d.db_instance_id = di.db_instance_id\n" +
-		"                                                                     inner join OpsDB.dbo.product pr on d.product_id = pr.product_id\n" +
-		"                                                                     inner join OpsDB.dbo.type t on d.type_id = t.type_id\n" +
-		"																	 inner join OpsDB.dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
-		"where pr.name = 'Analytics' and t.name in ('WEB') and dbi.status_id <> (select status_id from OpsDB.dbo.status where name = 'Decomissioned') and di.name not like 'qdwsql%' and c.acronym = '" + customer + "' and s.name = 'Success' and e.name = '" + env + "') a\n" +
+		"                                         from dbo.deployment d inner join dbo.status s on d.status_id = s.status_id \n" +
+		"                                                                     inner join dbo.client c on d.client_id = c.client_id\n" +
+		"                                                                     inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
+		"																	 inner join dbo.environment e on e.environment_id = p.environment_id\n" +
+		"                                                                     inner join dbo.db_instance di on d.db_instance_id = di.db_instance_id\n" +
+		"                                                                     inner join dbo.product pr on d.product_id = pr.product_id\n" +
+		"                                                                     inner join dbo.type t on d.type_id = t.type_id\n" +
+		"																	 inner join dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
+		"where pr.name = 'Analytics' and t.name in ('WEB') and dbi.status_id <> (select status_id from dbo.status where name = 'Decomissioned') and di.name not like 'qdwsql%' and c.acronym = '" + customer + "' and s.name = 'Success' and e.name = '" + env + "') a\n" +
 		"where a.Rank = 1;";
 
 		

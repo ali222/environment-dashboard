@@ -871,7 +871,8 @@ function showDashboard() {
 										required: true
 									},
 									webfrontendVersionDecision: {
-										required: true
+										required: true,
+										validVersion: true
 									},
 									njstartstep: {
 										required: true,
@@ -1322,7 +1323,16 @@ function showDashboard() {
 							
 							
 
+							Q.validator.addMethod("validVersion", function(value, element) {
 							
+								alert('at validVersion function');
+								/*
+								var futureDateTime = new Date(value);
+								var now = new Date();
+								return this.optional(element) || (futureDateTime &gt; now);
+								*/
+								
+							});
 							
 							Q("#delete").click(function(){
 							
@@ -2754,17 +2764,24 @@ function showDashboard() {
 										
 										Q("#datetimepickerLabel").text("Deployment kick off date and time");
 										
+										Q("#WebFrontEndLabelQuestion").text("Do you want to also upgrade frontend as part of this web deployment");
+										Q("#web-frontendLabel").text("Web version currently deployed");
+										Q("#web-frontend").val(Q("#webfrontendVersion").val());
+										Q("#current-frontend-version").show();
+										Q("#optional-web-frontend").show();	
 										
 										if (binderyFrontendExists)
 										{
+											Q("#WebBinderyFrontEndLabelQuestion").text(" Do you want to also upgrade bindery frontend as part of this web deployment");
 											Q("#web-bindery-frontendLabel").text("Bindery frontend version currently deployed");
 											Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
 											Q("#current-bindery-frontend-version").show();
-											Q("#binderyfrontend-versions").show();
+											Q("#optional-web-bindery-frontend").show();
 											
 										}
 										else
 										{
+											Q("#optional-web-bindery-frontend").hide();
 											
 											//No need to show below error since it would just mean that no bindery frontend has been deployed to client's environment
 											/*
@@ -2777,13 +2794,7 @@ function showDashboard() {
 											Q("#dialog3text").text("This client's environment doesn't have bindery frontend deployed");
 											Q("#dialog3").dialog("open");
 											*/
-											
-											Q("#WebFrontEndLabelQuestion").text(" Do you want to also upgrade frontend as part of this web deployment");
-											Q("#web-frontendLabel").text("Web version currently deployed");
-											Q("#web-frontend").val(Q("#webfrontendVersion").val());
-											Q("#current-frontend-version").show();
-											Q("#optional-web-frontend").show();	
-											
+																						
 										}
 										
 	
@@ -3512,36 +3523,7 @@ function showDashboard() {
 		</j:forEach>
 	</div>
 
-	<!--fronted bindery version stuff-->
-	<div id="current-bindery-frontend-version" style="text-align: left">
-		<label id="web-bindery-frontendLabel">Placeholder for whether to specify web version or bindery frontend version</label>
-		<div class="divider"/><input type="text" id="web-bindery-frontend" name="web-bindery-frontend" readonly="readonly"/><br></br>
-	</div>
-	
-    <div id="optional-web-bindery-frontend" style="text-align: left"> 
-		<label id="WebBinderyFrontEndLabelQuestion">Placeholder for whether to specify web version or bindery frontend version</label><div class="divider"/>
-		<select id="WebBinderyFrontEndDecision" name="WebBinderyFrontEndDecision">
-			<option value="">Choose...</option>
-			<option value="no">No</option>
-			<option value="yes">Yes</option>
-		</select>
-	</div>
-	
-	<!-- dropdown menu for bindery versions-->
-	<j:set var="binderytags" value="${it.getOrderOfWebOrBinderyFrontTags('bindery')}"/>
-	<div id="binderyfrontend-versions" style="text-align: left">
-		<label id="binderyfrontendVersionRequest">Please select bindery frontend version to deploy</label><div class="divider"/>
-		<select id="binderyfrontendVersionDecision" name="binderyfrontendVersionDecision">
-			<option value="">Choose...</option>
-			<code>
-				<j:forEach items="${binderytags}" var="binderytag">
-					<option value="${binderytag}">${binderytag}</option>
-				</j:forEach>
-			</code>	
-		</select>
-	</div>
-	
-	
+
 	<!--web version stuff-->
 	<br></br>
 	 <div id="current-frontend-version" style="text-align: left">
@@ -3565,7 +3547,7 @@ function showDashboard() {
 		<div class="divider"/><div class="divider"/>
 		<label id="webfrontendVersionRequest">Please select web version to deploy</label><div class="divider"/>
 		<select id="webfrontendVersionDecision" name="webfrontendVersionDecision">
-					<option value="">Choose...</option>
+			<option value="">Choose...</option>
 			<code>
 				<j:forEach items="${webtags}" var="webtag">
 					<option value="${webtag}">${webtag}</option>
@@ -3574,7 +3556,38 @@ function showDashboard() {
 		</select>
 	</div>	
 
-		
+
+	<!--frontend bindery version stuff-->
+	<br></br>
+	<div id="current-bindery-frontend-version" style="text-align: left">
+		<label id="web-bindery-frontendLabel">Placeholder for whether to specify web version or bindery frontend version</label>
+		<div class="divider"/><input type="text" id="web-bindery-frontend" name="web-bindery-frontend" readonly="readonly"/><br></br>
+	</div>
+	
+    <div id="optional-web-bindery-frontend" style="text-align: left"> 
+		<div class="divider"/><div class="divider"/>
+		<label id="WebBinderyFrontEndLabelQuestion">Placeholder for whether to specify web version or bindery frontend version</label><div class="divider"/>
+		<select id="WebBinderyFrontEndDecision" name="WebBinderyFrontEndDecision">
+			<option value="">Choose...</option>
+			<option value="no">No</option>
+			<option value="yes">Yes</option>
+		</select>
+	</div>
+	
+	<!-- dropdown menu for bindery versions-->
+	<j:set var="binderytags" value="${it.getOrderOfWebOrBinderyFrontTags('bindery')}"/>
+	<div id="binderyfrontend-versions" style="text-align: left">
+		<div class="divider"/><div class="divider"/>
+		<label id="binderyfrontendVersionRequest">Please select bindery frontend version to deploy</label><div class="divider"/>
+		<select id="binderyfrontendVersionDecision" name="binderyfrontendVersionDecision">
+			<option value="">Choose...</option>
+			<code>
+				<j:forEach items="${binderytags}" var="binderytag">
+					<option value="${binderytag}">${binderytag}</option>
+				</j:forEach>
+			</code>	
+		</select>
+	</div>
 	
 
 	<br></br>
