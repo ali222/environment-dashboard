@@ -488,7 +488,7 @@ function showDashboard() {
 													
 												   <!-- DROPDOWN MENUS FOR PERFORMING WEB DEPLOYMENTS under 'Last Commit' column-->
 													<j:if test="${comps.indexOf('Web') != -1}">  
-													<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web')}"/>
+													<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web', false)}"/>
 															
 														<div class="dropdown" style="float:right;">
 																<button class="dropbtn2" >Deploy to ${env_promote}...</button>
@@ -1997,7 +1997,7 @@ function showDashboard() {
 								{
 									Q("#buildNumber").val("");
 									Q("#build_num").val("");
-									Q("#webfrontendVersion").val("");
+									//Q("#webfrontendVersion").val("");
 									Q("#new-instance-type-selection").hide();
 								
 								}
@@ -2010,7 +2010,11 @@ function showDashboard() {
 								{
 									Q("#web_version").val("");
 									Q("#webVersion").val("");
-									Q("#binderyFrontendVersion").val("");
+									
+									if (typeofDeployment != "backend")
+									{
+										Q("#binderyFrontendVersion").val("");
+									}
 								}
 								
 								if(Q("#envSection").is(":visible"))
@@ -3592,7 +3596,7 @@ function showDashboard() {
 	</div>
 
 	<!-- dropdown menu for web versions-->
-	<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web')}"/>
+	<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web', true)}"/>
 	<div id="webfrontend-versions" style="text-align: left">
 		<div class="divider"/><div class="divider"/>
 		<label id="webfrontendVersionRequest">Please select web version to deploy</label><div class="divider"/>
@@ -3625,7 +3629,7 @@ function showDashboard() {
 	</div>
 	
 	<!-- dropdown menu for bindery versions-->
-	<j:set var="binderytags" value="${it.getOrderOfWebOrBinderyFrontTags('bindery')}"/>
+	<j:set var="binderytags" value="${it.getOrderOfWebOrBinderyFrontTags('bindery', false)}"/>
 	<div id="binderyfrontend-versions" style="text-align: left">
 		<div class="divider"/><div class="divider"/>
 		<label id="binderyfrontendVersionRequest">Please select bindery frontend version to deploy</label><div class="divider"/>

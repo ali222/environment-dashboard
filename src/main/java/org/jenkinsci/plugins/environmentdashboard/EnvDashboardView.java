@@ -485,7 +485,7 @@ public class EnvDashboardView extends View {
     }
 	
 	
-	public ArrayList<String> getOrderOfWebOrBinderyFrontTags(String type) {
+	public ArrayList<String> getOrderOfWebOrBinderyFrontTags(String type, boolean backend) {
 		
 		//System.out.println("At getOrderOfWebOrBinderyFrontTags function");
 		//System.out.println(type);
@@ -495,8 +495,12 @@ public class EnvDashboardView extends View {
 		{
 			//System.out.println("Getting web tags now...");
 			orderOfTags = splitTags(webtags);
-			orderOfTags.remove(0); //remove applyPendingChanges from the list
-			orderOfTags.remove(0); //remove binderyFrontendSubDeploy from the list
+			
+			if (backend)
+			{
+				orderOfTags.remove(0); //remove applyPendingChanges from the list
+				orderOfTags.remove(0); //remove binderyFrontendSubDeploy from the list
+			}
 		}
 		else
 		{
