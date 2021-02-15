@@ -1064,7 +1064,7 @@ function showDashboard() {
 									WebBinderyFrontEndDecision: "please make a choice",
 									WebFrontEndDecision: "please make a choice",
 									binderyfrontendVersionDecision: "please make a choice",
-									webfrontendVersionDecision: "please make a choice",
+									webfrontendVersionDecision: "please make a valid choice (Please reach out to DevOps Team for a major web upgrade)",
 									njStartStepDecision: "please make a choice",
 									datetimepicker: {
 										required: "please schedule this deployment/activity",
@@ -1325,14 +1325,21 @@ function showDashboard() {
 
 							Q.validator.addMethod("validVersion", function(value, element) {
 							
-								alert('at validVersion function');
-								/*
-								var futureDateTime = new Date(value);
-								var now = new Date();
-								return this.optional(element) || (futureDateTime &gt; now);
-								*/
+								//alert('at validVersion function');
 								
-							});
+								var splitString = Q("#webfrontendVersion").val().toLowerCase().replace('v', '').split(".");
+								var currentVersion = parseInt(splitString[0], 10);
+
+								splitString = value.toLowerCase().replace('v', '').split(".");
+								var futureVersion = parseInt(splitString[0], 10);
+
+								//console.log(currentVersion);
+								//console.log(futureVersion);
+								
+								return this.optional(element) || (currentVersion == futureVersion);
+								
+							}, "Please reach out to DevOps Team for a major web upgrade");
+							
 							
 							Q("#delete").click(function(){
 							

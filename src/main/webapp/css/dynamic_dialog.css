@@ -86,7 +86,7 @@
     height:auto;
     display:inline-block;
 }
-#datetimepicker, #jiraticket, #buildNumber, #web-bindery-frontend {
+#datetimepicker, #jiraticket, #buildNumber, #web-bindery-frontend, #currentinstancetype, #web-frontend {
 	border-radius: 3px; width:180px; padding:1px;
 	border:2px groove blue; }
 #requestforSHA {
