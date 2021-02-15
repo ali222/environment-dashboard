@@ -797,24 +797,18 @@ function showDashboard() {
 										if (Q("#build_num").val().length != 0 &amp;&amp; Q("#core_version").val().length == 0 &amp;&amp; typeofDeployment == "client")
 										{
 											//Perform client deployment
-											startDeployment("client",Q("#clientAcronym").val(),Q("#environment").val(),Q("#build_num").val(),"NA","NA","NA");
+											startDeployment("client",Q("#clientAcronym").val(),Q("#environment").val(),Q("#build_num").val(),"NA","NA","NA","NA");
 										}
 										else if (Q("#core_version").val().length != 0 &amp;&amp; Q("#build_num").val().length == 0 &amp;&amp; typeofDeployment == "backend")
 										{
 											//Perform backend deployment
-											if(Q("#resize").is(":checked"))
-											{
-												startDeployment("backend",Q("#clientAcronym").val(),Q("#environment").val(),Q("#core_version").val(),"NA",Q("#currentinstancetype").val(),Q("#futureinstancetype").val());
-											}
-											else
-											{
-												startDeployment("backend",Q("#clientAcronym").val(),Q("#environment").val(),Q("#core_version").val(),"NA","NA","NA");
-											}
+											startDeployment("backend",Q("#clientAcronym").val(),Q("#environment").val(),Q("#core_version").val(),Q("#binderyFrontendVersion").val(),Q("#currentinstancetype").val(),Q("#futureinstancetype").val(),Q("#webfrontendVersion").val());
+											
 										}
 										else if (typeofDeployment == "CRjob")
 										{
 											//Initiate CR job
-											startDeployment("CRjob",Q("#clientAcronym").val(),Q("#environment").val(),"NA","NA","NA","NA");
+											startDeployment("CRjob",Q("#clientAcronym").val(),Q("#environment").val(),"NA","NA","NA","NA","NA");
 
 										}
 										else if (typeofDeployment == "web")
@@ -828,7 +822,7 @@ function showDashboard() {
 											
 											//alert(Q("#binderyFrontendVersion").val());
 											
-											startDeployment("web",Q("#clientAcronym").val(),Q("#environment").val(),Q("#webVersion").val(),Q("#binderyFrontendVersion").val(),"NA","NA");
+											startDeployment("web",Q("#clientAcronym").val(),Q("#environment").val(),Q("#webVersion").val(),Q("#binderyFrontendVersion").val(),"NA","NA","NA");
 
 										}
 										else
@@ -3152,7 +3146,7 @@ function showDashboard() {
 						}
 						
 						
-						function startDeployment(type, comp, env, version, binderyVersion, curInstanceType, futInstanceType)
+						function startDeployment(type, comp, env, version, binderyVersion, curInstanceType, futInstanceType, webVersion)
 						{
 							var xmlHttp = new XMLHttpRequest();
 							var baseUrl;
@@ -3185,6 +3179,8 @@ function showDashboard() {
 							var StartNJ;
 							var nightly_job_start_step;
 							
+							var webDeploy = false;
+							var branch;
 							//Prepare switches and parameters for passing to Jenkins
 							
 							
@@ -3192,44 +3188,11 @@ function showDashboard() {
 							{
 							
 								//Set appropriate git branch for the chosen web version
-								
-								var options = {zeroExtend: true};
-								var branch;
-								
-								var cleanedVersion = version;
-								var parsedShortWebVersion = (cleanedVersion.replace('v','').split(".")[0] + "." + cleanedVersion.replace('v','').split(".")[1] + "." + cleanedVersion.replace('v','').split(".")[2]).replace('undefined',0);
-								
-								if (versionCompare(parsedShortWebVersion, "5.2.6", options) &lt; 0)
+								branch = determineWebBranch(version);
+								if(!branch)
 								{
-									branch = "deploy";
-								}
-								else if (versionCompare(parsedShortWebVersion, "5.3", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "5.2.6", options) &gt; 0 || versionCompare(parsedShortWebVersion, "5.2.6", options) === 0))
-								{
-									branch = "deploy-5.2";
-								}
-								else if (versionCompare(parsedShortWebVersion, "6.0", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "5.3.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "5.3.0", options) === 0))
-								{
-									branch = "deploy-5.3";
-								}
-								else if (versionCompare(parsedShortWebVersion, "6.0.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.0.0", options) === 0)
-								{
-									branch = "deploy-6.0";
-								}
-								else
-								{
-									//this web version has not qualified for any branch
-									branch = "nonExistentBranch";
-									
-									Q("#dialog3").dialog("option","title","Error");
-									Q("#dialog3text").text("Something is not right with this web " + version + " version because deployment branch could not be determined. Cannot proceed with this web deployment");
-									Q("#dialog3").dialog("open");
-									
 									return false;
 								}
-
-
-								//alert(branch);
-								//return false;
 								
 								
 								buildUrl = baseUrl + "/buildWithParameters?" +
@@ -3274,6 +3237,8 @@ function showDashboard() {
 									}
 									else
 									{
+										//backend deployment
+										
 										buildUrl = buildUrl +
 												"&amp;CoreVersion=" + version +
 												"&amp;ClientRevision=" + Q("#ClientRevision").val().trim() +
@@ -3284,6 +3249,37 @@ function showDashboard() {
 											buildUrl = buildUrl +
 												"&amp;FutureInstanceType=" + futInstanceType.trim().replace(/['"]+/g, '') +
 												"&amp;CurrentInstanceType=" + curInstanceType;
+										}
+										
+										
+										if (Q("#WebFrontEndDecision").val() == "yes")
+										{
+											webVersion = Q("#webfrontendVersionDecision").val();
+											webDeploy = true;
+										}
+										
+										if (Q("#WebBinderyFrontEndDecision").val() == "yes")
+										{
+											binderyVersion = Q("#binderyfrontendVersionDecision").val();
+											webDeploy = true;
+										}
+										
+										
+										if (webDeploy)
+										{
+										
+											//Set appropriate git branch for the chosen web version
+											branch = determineWebBranch(webVersion);
+											if(!branch)
+											{
+												return false;
+											}
+											
+											buildUrl = buildUrl +
+												"&amp;gitBranch=" + branch +
+												"&amp;tag=" + webVersion +
+												"&amp;binderyTag=" + binderyVersion;
+												
 										}
 										
 									}
@@ -3327,6 +3323,53 @@ function showDashboard() {
 							
 						}
 						
+						
+						function determineWebBranch(version)
+						{
+							
+							//Set appropriate git branch for the chosen web version
+								
+							var options = {zeroExtend: true};
+							var branch;
+							
+							var cleanedVersion = version;
+							var parsedShortWebVersion = (cleanedVersion.replace('v','').split(".")[0] + "." + cleanedVersion.replace('v','').split(".")[1] + "." + cleanedVersion.replace('v','').split(".")[2]).replace('undefined',0);
+							
+							if (versionCompare(parsedShortWebVersion, "5.2.6", options) &lt; 0)
+							{
+								branch = "deploy";
+							}
+							else if (versionCompare(parsedShortWebVersion, "5.3", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "5.2.6", options) &gt; 0 || versionCompare(parsedShortWebVersion, "5.2.6", options) === 0))
+							{
+								branch = "deploy-5.2";
+							}
+							else if (versionCompare(parsedShortWebVersion, "6.0", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "5.3.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "5.3.0", options) === 0))
+							{
+								branch = "deploy-5.3";
+							}
+							else if (versionCompare(parsedShortWebVersion, "6.0.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.0.0", options) === 0)
+							{
+								branch = "deploy-6.0";
+							}
+							else
+							{
+								//this web version has not qualified for any branch
+								branch = "nonExistentBranch";
+								
+								Q("#dialog3").dialog("option","title","Error");
+								Q("#dialog3text").text("Something is not right with this web " + version + " version because deployment branch could not be determined. Cannot proceed with this web deployment");
+								Q("#dialog3").dialog("open");
+								
+								return false;
+							}
+
+
+							return branch;
+							
+							//alert(branch);
+							//return false;
+						
+						}
 						
 						
 						function reloadPage()
