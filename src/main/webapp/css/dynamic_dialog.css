@@ -127,7 +127,7 @@ input[type=radio]:hover {
 .hoverable-table-in-dialog tr:hover td {
   background-color: #ccc;
 }
-#buildNumber, #ClientRevision, #web-bindery-frontend, #currentinstancetype{
+#buildNumber, #ClientRevision, #web-bindery-frontend, #currentinstancetype, #web-frontend{
 	background-color: #ccc;
 }
 input[type=radio] {

@@ -555,7 +555,7 @@ function showDashboard() {
 							}, 300 * 1000); // 5 minutes
 							
 							
-							Q("#overlay, #dialog, #dialog2, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #resizeServerSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
+							Q("#overlay, #dialog, #dialog2, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #resizeServerSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version, #current-frontend-version, #optional-web-frontend, #webfrontend-versions").hide();
 							Q("#dialog").draggable();
 							
 							Q("#dialog3").dialog({
@@ -864,7 +864,13 @@ function showDashboard() {
 									WebBinderyFrontEndDecision: {
 										required: true
 									},
+									WebFrontEndDecision: {
+										required: true
+									},
 									binderyfrontendVersionDecision: {
+										required: true
+									},
+									webfrontendVersionDecision: {
 										required: true
 									},
 									njstartstep: {
@@ -1055,7 +1061,9 @@ function showDashboard() {
 									clientBuilds: "please choose the stable build",
 									ClientRevisionDecision: "please make a choice",
 									WebBinderyFrontEndDecision: "please make a choice",
+									WebFrontEndDecision: "please make a choice",
 									binderyfrontendVersionDecision: "please make a choice",
+									webfrontendVersionDecision: "please make a choice",
 									njStartStepDecision: "please make a choice",
 									datetimepicker: {
 										required: "please schedule this deployment/activity",
@@ -1666,6 +1674,8 @@ function showDashboard() {
 							Q("#ClientRevisionDecision").change(CheckClientRevisionDecision);
 							Q("#EnvDecision").change(CheckEnvDecision);
 							Q("#WebBinderyFrontEndDecision").change(CheckWebBinderyFrontEndDecision);
+							Q("#WebFrontEndDecision").change(CheckWebFrontEndDecision);
+							
 							
 							Q("#startcrjob").change(function(){
 								if(this.checked) 
@@ -1923,7 +1933,7 @@ function showDashboard() {
 							
 							if (typeOfAction == "close")
 							{
-								Q("#overlay, #dialog, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version").hide();
+								Q("#overlay, #dialog, #ClientRevisionSection, #non-dev-env, #PRDsection, #prd-env, #njstartstepSection, #envSection, #prd-env-cr-job, #kickoffDateTimeSection, #new-instance-type-selection, #schedActivitySection, #optional-web-bindery-frontend, #binderyfrontend-versions, #current-bindery-frontend-version, #current-frontend-version, #optional-web-frontend, #webfrontend-versions").hide();
 								Q("#buildNumber").val("");
 								Q("#core_version").val("");
 								Q("#build_num").val("");
@@ -1931,6 +1941,7 @@ function showDashboard() {
 								Q("#web_version").val("");
 								Q("#webVersion").val("");
 								Q("#binderyFrontendVersion").val("");
+								Q("#webfrontendVersion").val("");
 								
 								Q("#startCRjobSection").show();
 								Q("#startnj").show();
@@ -1953,6 +1964,11 @@ function showDashboard() {
 									Q("#binderyfrontend-versions").hide();
 								}
 								
+								//web upgrade during backend deployment
+								if(Q("#WebFrontEndDecision").is(":visible"))
+								{
+									Q("#webfrontend-versions").hide();
+								}
 								
 								if (Q("#environment").val() != 'PRD')
 								{
@@ -1970,6 +1986,7 @@ function showDashboard() {
 								{
 									Q("#buildNumber").val("");
 									Q("#build_num").val("");
+									Q("#webfrontendVersion").val("");
 									Q("#new-instance-type-selection").hide();
 								
 								}
@@ -2014,6 +2031,11 @@ function showDashboard() {
 							if (Q("#binderyFrontendVersion").val())
 							{
 								Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
+							}
+							
+							if (Q("#webfrontendVersion").val())
+							{
+								Q("#web-frontend").val(Q("#webfrontendVersion").val());
 							}
 						
 						}
@@ -2144,7 +2166,10 @@ function showDashboard() {
 									 //Q("#dialog2Title").text(CRjob);
 									 Q("#dialog2").dialog("option","title",CRjob);
 									 
+									 
+									 getWebFrontEndVersions();
 									 getNightlyjobSteps();
+									 
 									 
 									 
 								 }
@@ -2190,6 +2215,20 @@ function showDashboard() {
 							{
 								Q("#binderyfrontendVersionDecision").val("");
 								Q("#binderyfrontend-versions").hide(500);
+							}
+							
+						}
+						
+						function CheckWebFrontEndDecision()
+						{
+							if (Q("#WebFrontEndDecision").val() == "yes")
+							{
+								Q("#webfrontend-versions").show(500);
+							}
+							else
+							{
+								Q("#webfrontendVersionDecision").val("");
+								Q("#webfrontend-versions").hide(500);
 							}
 							
 						}
@@ -2514,6 +2553,9 @@ function showDashboard() {
 									Q("#binderyfrontend-versions").hide();
 									Q("#current-bindery-frontend-version").hide();
 									
+									Q("#webfrontend-versions").hide();
+									Q("#current-frontend-version").hide();
+									
 									if (typeofDeployment == "web")
 									{
 										//alert('here show dialog for web deployments');
@@ -2646,6 +2688,146 @@ function showDashboard() {
 						
 						}
 						
+						
+						function getWebFrontEndVersions()
+						{
+						
+							
+							var response8 = "";
+							var binderyFrontendExists = false;
+							EnvDashViewProxy.getWebBinderyFrontEndVersionsSQLquery(Q("#clientAcronym").val(),Q("#environment").val(), function(t) {
+								 response8 = t.responseObject();
+								 
+								
+								 if (response8.indexOf("failed") == -1)
+								 {
+									/*
+									Q("#dialog3").dialog("option","title","Debug");
+									Q("#dialog3text").text(response8);
+									Q("#dialog3").dialog("open");
+									*/
+									 
+									 var versions = JSON.parse(response8);
+									 //console.log(versions);
+									 //Get information on the nightly job
+									 
+								     Q.each(versions.info, function(index, element){
+											
+										//console.log(element.name);
+										Q("#webfrontendVersion").val(element.webVersion);
+										
+										if (element.binderyFrontendVersion != "NA")
+										{
+											Q("#binderyFrontendVersion").val(element.binderyFrontendVersion);
+											binderyFrontendExists = true;
+										}
+										else
+										{
+											Q("#binderyFrontendVersion").val("");
+										}
+										
+										Q("#activeServer").val(element.activeServer);
+									 });
+									 									
+									
+									//Q("#loader2").hide();
+									//Q("#dialog").show();
+									
+									
+									Q("#PRDsection").show();
+									//Q("#startCRjobSection").hide();
+									//Q("#startnj").hide();
+									//Q("#startnjlabel").hide();
+									//Q("#noRollbackSection").hide();
+									//Q("#runQASQLscriptSection").hide();
+									//Q("#resizeServerSection").hide();
+									
+									Q("#binderyfrontend-versions").hide();
+									Q("#current-bindery-frontend-version").hide();
+									
+									Q("#webfrontend-versions").hide();
+									Q("#current-frontend-version").hide();
+									
+									if (typeofDeployment == "backend")
+									{
+										//alert('here show dialog for web deployments');
+										
+										Q("#datetimepickerLabel").text("Deployment kick off date and time");
+										
+										
+										if (binderyFrontendExists)
+										{
+											Q("#web-bindery-frontendLabel").text("Bindery frontend version currently deployed");
+											Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
+											Q("#current-bindery-frontend-version").show();
+											Q("#binderyfrontend-versions").show();
+											
+										}
+										else
+										{
+											
+											//No need to show below error since it would just mean that no bindery frontend has been deployed to client's environment
+											/*
+											Q("#optional-web-bindery-frontend").hide();
+											
+											Q("#overlay").hide();
+											Q("#dialog").hide();
+											
+											Q("#dialog3").dialog("option","title","Error");
+											Q("#dialog3text").text("This client's environment doesn't have bindery frontend deployed");
+											Q("#dialog3").dialog("open");
+											*/
+											
+											Q("#WebFrontEndLabelQuestion").text(" Do you want to also upgrade frontend as part of this web deployment");
+											Q("#web-frontendLabel").text("Web version currently deployed");
+											Q("#web-frontend").val(Q("#webfrontendVersion").val());
+											Q("#current-frontend-version").show();
+											Q("#optional-web-frontend").show();	
+											
+										}
+										
+	
+										
+									}
+									else
+									{
+									
+										//for bindery frontend deployment
+										
+									
+									}
+
+									
+									if (Q("#environment").val() == "PRD") 
+									{		
+										Q("#kickoffDateTimeSection").show();
+									}
+									else
+									{
+										Q("#schedActivitySection").show();
+									}
+									
+									
+								 }
+								 else
+								 {
+								 
+									//No need to show below error since it would just mean that no frontend has been deployed to client's environment
+									/*
+									Q("#loader2").hide();
+									Q("#overlay").hide();
+									
+									
+									Q("#dialog3").dialog("option","title","Error");
+									Q("#dialog3text").text(response8);
+									Q("#dialog3").dialog("open");
+									*/
+								 }
+								 
+								 
+							});
+						
+						}
 						
 						function getCurrentAndAvailableInstanceTypes()
 						{
@@ -3276,35 +3458,6 @@ function showDashboard() {
 		</select>
 	</div>
 	
-	 <div id="current-bindery-frontend-version" style="text-align: left">
-		<label id="web-bindery-frontendLabel">Placeholder for whether to specify web version or bindery frontend version</label>
-		<div class="divider"/><input type="text" id="web-bindery-frontend" name="web-bindery-frontend" readonly="readonly"/><br></br>
-	</div>
-	
-    <div id="optional-web-bindery-frontend" style="text-align: left"> 
-		<label id="WebBinderyFrontEndLabelQuestion">Placeholder for whether to specify web version or bindery frontend version</label><div class="divider"/>
-		<select id="WebBinderyFrontEndDecision" name="WebBinderyFrontEndDecision">
-			<option value="">Choose...</option>
-			<option value="no">No</option>
-			<option value="yes">Yes</option>
-		</select>
-	</div>
-	
-	<!-- dropdown menu for bindery versions-->
-	<j:set var="binderytags" value="${it.getOrderOfWebOrBinderyFrontTags('bindery')}"/>
-	<div id="binderyfrontend-versions" style="text-align: left">
-		<label id="binderyfrontendVersionRequest">Please select bindery frontend version to deploy</label><div class="divider"/>
-		<select id="binderyfrontendVersionDecision" name="binderyfrontendVersionDecision">
-					<option value="">Choose...</option>
-			<code>
-				<j:forEach items="${binderytags}" var="binderytag">
-					<option value="${binderytag}">${binderytag}</option>
-				</j:forEach>
-			</code>	
-		</select>
-	</div>
-
-	
 	<div id="ClientRevisionSection">
 		<label id="ClientRevisionLabel">Selected client build</label>
 		<div class="divider"/><input type="text" id="buildNumber" name="buildNumber" readonly="readonly"/><br></br>
@@ -3359,6 +3512,71 @@ function showDashboard() {
 		</j:forEach>
 	</div>
 
+	<!--fronted bindery version stuff-->
+	<div id="current-bindery-frontend-version" style="text-align: left">
+		<label id="web-bindery-frontendLabel">Placeholder for whether to specify web version or bindery frontend version</label>
+		<div class="divider"/><input type="text" id="web-bindery-frontend" name="web-bindery-frontend" readonly="readonly"/><br></br>
+	</div>
+	
+    <div id="optional-web-bindery-frontend" style="text-align: left"> 
+		<label id="WebBinderyFrontEndLabelQuestion">Placeholder for whether to specify web version or bindery frontend version</label><div class="divider"/>
+		<select id="WebBinderyFrontEndDecision" name="WebBinderyFrontEndDecision">
+			<option value="">Choose...</option>
+			<option value="no">No</option>
+			<option value="yes">Yes</option>
+		</select>
+	</div>
+	
+	<!-- dropdown menu for bindery versions-->
+	<j:set var="binderytags" value="${it.getOrderOfWebOrBinderyFrontTags('bindery')}"/>
+	<div id="binderyfrontend-versions" style="text-align: left">
+		<label id="binderyfrontendVersionRequest">Please select bindery frontend version to deploy</label><div class="divider"/>
+		<select id="binderyfrontendVersionDecision" name="binderyfrontendVersionDecision">
+			<option value="">Choose...</option>
+			<code>
+				<j:forEach items="${binderytags}" var="binderytag">
+					<option value="${binderytag}">${binderytag}</option>
+				</j:forEach>
+			</code>	
+		</select>
+	</div>
+	
+	
+	<!--web version stuff-->
+	<br></br>
+	 <div id="current-frontend-version" style="text-align: left">
+		<label id="web-frontendLabel">Placeholder for web version</label>
+		<div class="divider"/><input type="text" id="web-frontend" name="web-frontend" readonly="readonly"/><br></br>
+	</div>
+
+	<div id="optional-web-frontend" style="text-align: left">
+		<div class="divider"/><div class="divider"/>
+		<label id="WebFrontEndLabelQuestion">Placeholder for web version</label><div class="divider"/>
+		<select id="WebFrontEndDecision" name="WebFrontEndDecision">
+			<option value="">Choose...</option>
+			<option value="no">No</option>
+			<option value="yes">Yes</option>
+		</select>
+	</div>
+
+	<!-- dropdown menu for web versions-->
+	<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web')}"/>
+	<div id="webfrontend-versions" style="text-align: left">
+		<div class="divider"/><div class="divider"/>
+		<label id="webfrontendVersionRequest">Please select web version to deploy</label><div class="divider"/>
+		<select id="webfrontendVersionDecision" name="webfrontendVersionDecision">
+					<option value="">Choose...</option>
+			<code>
+				<j:forEach items="${webtags}" var="webtag">
+					<option value="${webtag}">${webtag}</option>
+				</j:forEach>
+			</code>	
+		</select>
+	</div>	
+
+		
+	
+
 	<br></br>
 
 	<div id="PRDsection">
@@ -3391,7 +3609,7 @@ function showDashboard() {
 		</div>
 		
 		<br></br>
-		
+				
 		<div id="schedActivitySection">
 			<input type="checkbox" id="schedActivity"></input>
 			<label for="schedActivity"> Schedule this deployment/activity</label><br></br>
@@ -3418,6 +3636,7 @@ function showDashboard() {
 	<input type="hidden" id="web_version" value=""/>
 	<input type="hidden" id="webVersion" value=""/>
 	<input type="hidden" id="binderyFrontendVersion" value=""/>
+	<input type="hidden" id="webfrontendVersion" value=""/>
 	
 	
 	

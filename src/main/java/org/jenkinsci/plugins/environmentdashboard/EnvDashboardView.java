@@ -495,6 +495,8 @@ public class EnvDashboardView extends View {
 		{
 			//System.out.println("Getting web tags now...");
 			orderOfTags = splitTags(webtags);
+			orderOfTags.remove(0); //remove applyPendingChanges from the list
+			orderOfTags.remove(0); //remove binderyFrontendSubDeploy from the list
 		}
 		else
 		{
