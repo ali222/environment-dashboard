@@ -3097,7 +3097,8 @@ function showDashboard() {
 											
 											Q("#runQASQLscriptSection").show();
 											
-											//Q("#resizeServerSection").show();
+											
+											//Q("#resizeServerSection").show(); //this should be commented out because serverResizeQualified boolean determines whether to show this checkbox
 										}
 										else
 										{
