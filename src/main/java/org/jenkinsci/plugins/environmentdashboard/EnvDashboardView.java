@@ -1897,8 +1897,7 @@ public class EnvDashboardView extends View {
             "	inner join dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
             "	inner join dbo.db_instance di on dbi.db_instance_id = di.db_instance_id\n" +
             "	inner join dbo.status s on s.status_id = dbi.status_id\n" +
-            "       where t.name in ('WAREHOUSE') and s.name not in ('Decomissioned', 'Dropped')\n" +
-            "       and di.name = '" + activeServer + "' and s.name = 'Active'";
+            "       where t.name in ('WAREHOUSE') and di.name = '" + activeServer + "' and s.name = 'Active'";
 		
 		returnValue = getRequestedInfo(customer, env, SQL3, "numOfActiveEnvs");
 		
