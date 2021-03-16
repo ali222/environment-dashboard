@@ -2769,7 +2769,7 @@ function showDashboard() {
 										
 										Q("#datetimepickerLabel").text("Deployment kick off date and time");
 										
-										Q("#WebFrontEndLabelQuestion").text("Do you want to also upgrade frontend as part of this web deployment");
+										Q("#WebFrontEndLabelQuestion").text("Do you want to upgrade frontend after backend deployment succeeds?");
 										Q("#web-frontendLabel").text("Web version currently deployed");
 										Q("#web-frontend").val(Q("#webfrontendVersion").val());
 										Q("#current-frontend-version").show();
@@ -2777,7 +2777,7 @@ function showDashboard() {
 										
 										if (binderyFrontendExists)
 										{
-											Q("#WebBinderyFrontEndLabelQuestion").text(" Do you want to also upgrade bindery frontend as part of this web deployment");
+											Q("#WebBinderyFrontEndLabelQuestion").text("Do you want to upgrade bindery frontend after backend deployment succeeds?");
 											Q("#web-bindery-frontendLabel").text("Bindery frontend version currently deployed");
 											Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
 											Q("#current-bindery-frontend-version").show();
