@@ -3722,6 +3722,7 @@ function showDashboard() {
 	<label for="runqascript"> Run QA SQL script</label>
 	</div>
 	
+	<!--
 	<div id="resizeServerSection">
 	<input type="checkbox" id="resize"></input>
 	<label for="resize"> Resize backend server</label>
@@ -3735,7 +3736,7 @@ function showDashboard() {
 		<label id="futureinstancetypeLabel">Available instance types</label>
 			<div class="divider"/><input type="text" id="futureinstancetype" name="futureinstancetype" size="15"/>
 	</div>
-	
+	-->
 	
 	<!--
 	<div id="BackendDeploySection">
