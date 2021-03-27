@@ -2468,8 +2468,8 @@ public class EnvDashboardView extends View {
 	
 	public String getOpsDB()
 	{
-		String db = "opsdb_dev";
-		//String db = "opsdb";
+		//String db = "opsdb_dev";
+		String db = "opsdb";
 		return db;
     }
 	
