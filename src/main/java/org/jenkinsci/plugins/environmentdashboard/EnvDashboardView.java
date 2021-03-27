@@ -1889,7 +1889,8 @@ public class EnvDashboardView extends View {
 	   }
 
 		System.out.println(getCurentDateTime() + ": Checking how many active deployment environments exist at " + activeServer + " server...");
-		String SQL3 = "select count(*) as 'numOfActiveEnvs'\n" +
+		String SQL3 = "use " + getOpsDB() + ";\n" +
+		    "select count(*) as 'numOfActiveEnvs'\n" +
             "	from dbo.[database] d inner join dbo.client c on d.client_id = c.client_id\n" +
             "	inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
             "	inner join dbo.environment e on e.environment_id = p.environment_id\n" +
