@@ -463,7 +463,7 @@ public class EnvDashboardView extends View {
         // alpha and beta tags must be approved
         for (Iterator<String> it=orderOfTags.iterator(); it.hasNext();) {
             String tag = it.next();
-            if (tag.contains("beta") || tag.contains("alpha") || (tag.contains("temp") && env.equals("PRD"))) {
+            if (tag.contains("beta") || tag.contains("alpha") || (tag.contains("temp") && (env.equals("PRD") || env.equals("PRD6")))) {
                 boolean delete = true;
                 for(String customer : betaCustomersList) {
                     if ( (client.replace(" Backend", ":") + tag).startsWith(customer)) {

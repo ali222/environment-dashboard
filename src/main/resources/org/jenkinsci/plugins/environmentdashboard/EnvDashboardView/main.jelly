@@ -1981,7 +1981,7 @@ function showDashboard() {
 									Q("#webfrontend-versions").hide();
 								}
 								
-								if (Q("#environment").val() != 'PRD')
+								if (Q("#environment").val() != 'PRD' &amp;&amp; Q("#environment").val() != 'PRD6')
 								{
 									Q("#kickoffDateTimeSection").hide();
 								}
@@ -2137,11 +2137,11 @@ function showDashboard() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; env == "PRD")
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; env == "PRD")
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2253,7 +2253,7 @@ function showDashboard() {
 
 							if (Q("#EnvDecision").val() != "")
 							{
-								if (Q("#EnvDecision").val() != "PRD")
+								if (Q("#EnvDecision").val() != "PRD" &amp;&amp; Q("#EnvDecision").val() != "PRD6")
 								{
 									Q("#kickoffDateTimeSection").hide();
 									
@@ -2312,11 +2312,11 @@ function showDashboard() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; env == "PRD")
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; env == "PRD")
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2396,11 +2396,11 @@ function showDashboard() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; env == "PRD")
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; env == "PRD")
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2463,11 +2463,11 @@ function showDashboard() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; env == "PRD")
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; env == "PRD")
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2675,7 +2675,7 @@ function showDashboard() {
 									}
 
 									
-									if (Q("#environment").val() == "PRD") 
+									if (Q("#environment").val() == "PRD" || Q("#environment").val() == "PRD6") 
 									{		
 										Q("#kickoffDateTimeSection").show();
 									}
@@ -2814,7 +2814,7 @@ function showDashboard() {
 									}
 
 									
-									if (Q("#environment").val() == "PRD") 
+									if (Q("#environment").val() == "PRD" || Q("#environment").val() == "PRD6") 
 									{		
 										Q("#kickoffDateTimeSection").show();
 									}
@@ -3113,7 +3113,7 @@ function showDashboard() {
 									}
 
 									
-									if (Q("#environment").val() == "PRD") 
+									if (Q("#environment").val() == "PRD" || Q("#environment").val() == "PRD6") 
 									{		
 										Q("#kickoffDateTimeSection").show();
 									}
@@ -3511,6 +3511,7 @@ function showDashboard() {
 			<option value="QA">QA</option>
 			<option value="UAT">UAT</option>
 			<option value="PRD">PRD</option>
+			<option value="PRD6">PRD6</option>
 		</select>
 	</div>
 	
