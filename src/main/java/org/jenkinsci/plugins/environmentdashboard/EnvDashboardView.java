@@ -463,7 +463,7 @@ public class EnvDashboardView extends View {
         // alpha and beta tags must be approved
         for (Iterator<String> it=orderOfTags.iterator(); it.hasNext();) {
             String tag = it.next();
-            if (tag.contains("beta") || tag.contains("alpha") || (tag.contains("temp") && env.equals("PRD"))) {
+            if (tag.contains("beta") || tag.contains("alpha") || (tag.contains("temp") && (env.equals("PRD") || env.equals("PRD6")))) {
                 boolean delete = true;
                 for(String customer : betaCustomersList) {
                     if ( (client.replace(" Backend", ":") + tag).startsWith(customer)) {
@@ -485,7 +485,7 @@ public class EnvDashboardView extends View {
     }
 	
 	
-	public ArrayList<String> getOrderOfWebOrBinderyFrontTags(String type) {
+	public ArrayList<String> getOrderOfWebOrBinderyFrontTags(String type, boolean backend) {
 		
 		//System.out.println("At getOrderOfWebOrBinderyFrontTags function");
 		//System.out.println(type);
@@ -495,6 +495,12 @@ public class EnvDashboardView extends View {
 		{
 			//System.out.println("Getting web tags now...");
 			orderOfTags = splitTags(webtags);
+			
+			if (backend)
+			{
+				orderOfTags.remove(0); //remove applyPendingChanges from the list
+				orderOfTags.remove(0); //remove binderyFrontendSubDeploy from the list
+			}
 		}
 		else
 		{
@@ -1453,6 +1459,7 @@ public class EnvDashboardView extends View {
 		String activeDB = null;
 		String provEnv = null;
 		String activeServer = null;
+		String currentInstanceType = null;
 
 		System.out.println(getCurentDateTime() + ": At getActiveDBprovEnvAndServerSQLquery function");
 
@@ -1523,7 +1530,25 @@ public class EnvDashboardView extends View {
 			
 		}
 		
-		returnString = activeDB + "," + provEnv + "," + activeServer;
+		//identify instance type
+		SQL = "use " + getOpsDB() + ";\n" +
+		"select instance_type from dbo.[server] where name = '" + activeServer + "';";
+
+		returnValue = getRequestedInfo(customer, env, SQL, "instance_type");
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			currentInstanceType = returnValue;
+			//System.out.println(currentInstanceType);
+			
+		}
+		
+		returnString = activeDB + "," + provEnv + "," + activeServer + "," + currentInstanceType;
 		
 		return returnString;
 	
@@ -1547,15 +1572,15 @@ public class EnvDashboardView extends View {
 		"from (\n" +
 		"select d.version as 'web_version', d.client_revision as 'binderyfrontend_version',\n" +
 		"		RANK() OVER (PARTITION BY c.acronym, e.name, p.name, di.name, t.name ORDER BY d.start_timestamp DESC) AS Rank\n" +
-		"                                         from OpsDB.dbo.deployment d inner join OpsDB.dbo.status s on d.status_id = s.status_id \n" +
-		"                                                                     inner join OpsDB.dbo.client c on d.client_id = c.client_id\n" +
-		"                                                                     inner join OpsDB.dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
-		"																	 inner join OpsDB.dbo.environment e on e.environment_id = p.environment_id\n" +
-		"                                                                     inner join OpsDB.dbo.db_instance di on d.db_instance_id = di.db_instance_id\n" +
-		"                                                                     inner join OpsDB.dbo.product pr on d.product_id = pr.product_id\n" +
-		"                                                                     inner join OpsDB.dbo.type t on d.type_id = t.type_id\n" +
-		"																	 inner join OpsDB.dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
-		"where pr.name = 'Analytics' and t.name in ('WEB') and dbi.status_id <> (select status_id from OpsDB.dbo.status where name = 'Decomissioned') and di.name not like 'qdwsql%' and c.acronym = '" + customer + "' and s.name = 'Success' and e.name = '" + env + "') a\n" +
+		"                                         from dbo.deployment d inner join dbo.status s on d.status_id = s.status_id \n" +
+		"                                                                     inner join dbo.client c on d.client_id = c.client_id\n" +
+		"                                                                     inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
+		"																	 inner join dbo.environment e on e.environment_id = p.environment_id\n" +
+		"                                                                     inner join dbo.db_instance di on d.db_instance_id = di.db_instance_id\n" +
+		"                                                                     inner join dbo.product pr on d.product_id = pr.product_id\n" +
+		"                                                                     inner join dbo.type t on d.type_id = t.type_id\n" +
+		"																	 inner join dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
+		"where pr.name = 'Analytics' and t.name in ('WEB') and dbi.status_id <> (select status_id from dbo.status where name = 'Decomissioned') and di.name not like 'qdwsql%' and c.acronym = '" + customer + "' and s.name = 'Success' and e.name = '" + env + "') a\n" +
 		"where a.Rank = 1;";
 
 		
@@ -1735,6 +1760,10 @@ public class EnvDashboardView extends View {
 	   String activeDB = null;
 	   String provEnv = null;
 	   String activeServer = null;
+	   String currentInstanceType = null;
+	   String currentInstanceTypeFamily = null;
+	   int numOfActiveEnvs = 0;
+	   boolean resizeServer = false;
 		
 	   System.out.println(getCurentDateTime() + ": At getNightlyjobStepsSQLquery function");
 	   
@@ -1761,6 +1790,12 @@ public class EnvDashboardView extends View {
 			activeServer = arrOfStr[2];
 			System.out.println(activeServer);
 			
+			currentInstanceType = arrOfStr[3];
+			System.out.println(currentInstanceType);
+			
+			currentInstanceTypeFamily = arrOfStr[3].split("\\.")[0];
+			System.out.println(currentInstanceTypeFamily);
+			
 		}
 			
 	  
@@ -1784,6 +1819,9 @@ public class EnvDashboardView extends View {
        Connection conn = null;
        Statement stat = null;
 	   
+	   Connection conn2 = null;
+	   Statement stat2 = null;
+	   
 	   String NightlyJobSteps = new String();
 	   String NightlyJobInfo = new String();
 	   String retrievedJob = null;
@@ -1804,9 +1842,7 @@ public class EnvDashboardView extends View {
 	   //String SQL = "select customerid, name from customers where name = 'orlando';";
 	   
 	   
-	   
-	   
-       try 
+	   try 
 	   {
            if (conn == null){throw new Exception("Failed to create connection to database");};
            stat = conn.createStatement();
@@ -1821,6 +1857,70 @@ public class EnvDashboardView extends View {
 
        }
 	   
+	   //Get available instance types for a particular instance family
+	   String opsdbServer = getOpsDBinstance();
+		//Check if server is reachable
+		if (!testServerConnection(opsdbServer))
+		{
+			error = "failed " + opsdbServer + " is not reachable";
+			System.out.println(getCurentDateTime() + ": " + error);
+			returnString = error;
+			return returnString;
+		}
+
+		conn2 = CustomDBConnection.getConnection(opsdbServer, getOpsDBinstancePort(), "placeholderForDB", getdbUser(), getdbPassword(), getSQLauth());
+		String SQL2 = "use " + getOpsDB() + ";\n" +
+		//"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%';";
+		"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%' and instance_type <> '" + currentInstanceType + "' order by instance_type desc;";
+		
+	   try 
+	   {
+		   if (conn2 == null){throw new Exception("Failed to create connection to database");};
+		   stat2 = conn2.createStatement();
+	   } 
+	   catch (Exception e)
+	   {
+		   error = "E13" + " failed " + e.getMessage();
+		   System.out.println(error);
+		   
+		   returnString = error;
+		   return returnString;
+
+	   }
+
+		System.out.println(getCurentDateTime() + ": Checking how many active deployment environments exist at " + activeServer + " server...");
+		String SQL3 = "use " + getOpsDB() + ";\n" +
+		    "select count(*) as 'numOfActiveEnvs'\n" +
+            "	from dbo.[database] d inner join dbo.client c on d.client_id = c.client_id\n" +
+            "	inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
+            "	inner join dbo.environment e on e.environment_id = p.environment_id\n" +
+            "	inner join dbo.type t on t.type_id = d.type_id\n" +
+            "	inner join dbo.db_instance_database dbi on dbi.database_id = d.database_id\n" +
+            "	inner join dbo.db_instance di on dbi.db_instance_id = di.db_instance_id\n" +
+            "	inner join dbo.status s on s.status_id = dbi.status_id\n" +
+            "       where t.name in ('WAREHOUSE') and di.name = '" + activeServer + "' and s.name = 'Active'";
+		
+		returnValue = getRequestedInfo(customer, env, SQL3, "numOfActiveEnvs");
+		
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			numOfActiveEnvs = Integer.parseInt(returnValue);
+			System.out.println(numOfActiveEnvs);
+			
+			if(numOfActiveEnvs == 1)
+			{
+				resizeServer = true;
+			}
+			
+		}
+	    
+	   
 	   
        try 
 	   {
@@ -1829,6 +1929,9 @@ public class EnvDashboardView extends View {
 		   JsonArrayBuilder jarr = Json.createArrayBuilder();
 		   JsonArray arr = null;
 		   JsonObject joSteps = null;
+		   JsonObject joResizeServer = null;
+		   JsonObject joCurrentInstanceType = null;
+		   JsonObject joInstanceTypes = null;
 		   JsonObject joInfo = null;
 		   JsonObject joInfoStart = null;
 		   Date next_run_date_time_for_conv = null;
@@ -2128,7 +2231,47 @@ public class EnvDashboardView extends View {
 			   joInfoStart = Json.createObjectBuilder().add("infoStart", arr).build();
 			   //System.out.println(joInfoStart);
 				
-				//Combine three json objects
+				
+				//Identify whether server resize is qualified
+				System.out.println(getCurentDateTime() + ": Check whether server resize is qualified...");				
+				jarr.add(Json.createObjectBuilder()
+					  .add("resize_server", resizeServer)
+				  .build());
+				
+				arr = jarr.build();
+				joResizeServer = Json.createObjectBuilder().add("resizeserver", arr).build();
+				System.out.println(joResizeServer);
+				
+				
+				
+			    //Get current instance type
+				System.out.println(getCurentDateTime() + ": Check current instance type...");
+				jarr.add(Json.createObjectBuilder()
+					  .add("current_instance_type", currentInstanceType)
+				  .build());
+				
+				arr = jarr.build();
+				joCurrentInstanceType = Json.createObjectBuilder().add("currentinstancetype", arr).build();
+				System.out.println(joCurrentInstanceType);
+				
+				
+			   //Get available instance types
+				System.out.println(getCurentDateTime() + ": About to execute SQL query for retrieving instance types...");
+				rs = stat2.executeQuery(SQL2);
+
+				while (rs.next()) {
+					
+					jarr.add(Json.createObjectBuilder()
+						  .add("instance_type", rs.getString("instance_type"))
+					  .build());
+				}
+
+				arr = jarr.build();
+				joInstanceTypes = Json.createObjectBuilder().add("instancetypes", arr).build();
+				System.out.println(joInstanceTypes);
+				
+				
+				//Combine six json objects
 			   JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
 
 				for (String key : joSteps.keySet()) {
@@ -2139,6 +2282,15 @@ public class EnvDashboardView extends View {
 				}
 				for (String key : joInfoStart.keySet()) {
 					jsonObjectBuilder.add(key, joInfoStart.get(key));
+				}
+				for (String key : joResizeServer.keySet()) {
+					jsonObjectBuilder.add(key, joResizeServer.get(key));
+				}
+				for (String key : joCurrentInstanceType.keySet()) {
+					jsonObjectBuilder.add(key, joCurrentInstanceType.get(key));
+				}
+			    for (String key : joInstanceTypes.keySet()) {
+					jsonObjectBuilder.add(key, joInstanceTypes.get(key));
 				}
 				 
 				JsonObject combinedStepsAndInfoAndInfoStart = jsonObjectBuilder.build();
