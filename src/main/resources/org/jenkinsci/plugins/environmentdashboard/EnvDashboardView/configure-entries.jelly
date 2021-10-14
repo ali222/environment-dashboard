@@ -20,6 +20,14 @@
     <f:entry title="Limit deploy history to last X deploys" field="deployHistory">
         <f:textbox default="10"/>
     </f:entry>
+	
+	<f:entry title="Ops DB instance" field="opsdbinstance">
+	  <f:textbox />
+	</f:entry>
+	
+	<f:entry title="Ops DB" field="opsdb">
+	  <f:textbox />
+	</f:entry>
 
 	<f:entry title="SQL authentication (Check this checkbox only when doing tests via Jenkins master DEV)" field="SQLauth">
 	  <f:checkbox />
@@ -32,7 +40,6 @@
 	<f:entry title="DB password" field="dbPassword">
 	  <f:password value="${instance.dbPasswordSecret}"/>
 	</f:entry>
-
 	
 	<f:entry title="LDAP server" field="LDAPserver">
 	  <f:textbox />

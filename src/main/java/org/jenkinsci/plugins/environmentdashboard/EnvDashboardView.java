@@ -87,12 +87,15 @@ public class EnvDashboardView extends View {
 
     private String deployHistory = null;
 	
+	private String opsdbinstance = null;
+	
+	private String opsdb = null;
+	
 	private String dbUser = null;
 	
 	private Secret dbPassword = null;
 	
 	private Boolean SQLauth = null;
-	
 	
 	private String LDAPserver = null;
 	
@@ -103,16 +106,23 @@ public class EnvDashboardView extends View {
 	private String webtags = null;
 	
 	private String binderyfronttags = null;
+	
+	public static String selectedclient = "noneexistingclient";
+	
+    public static boolean allclients = false;
 
 	
     @DataBoundConstructor
-    public EnvDashboardView(final String name, final String envOrder, final String compOrder, final String tags, final String betaCustomers, final String deployHistory, final String dbUser, final String dbPassword, final Boolean SQLauth, final String LDAPserver, final String LDAPuser, final String LDAPpassword, final String webtags, final String binderyfronttags) {
+    public EnvDashboardView(final String name, final String envOrder, final String compOrder, final String tags, final String betaCustomers, final String deployHistory, final String opsdbinstance, final String opsdb, final String dbUser, final String dbPassword, final Boolean SQLauth, final String LDAPserver, final String LDAPuser, final String LDAPpassword, final String webtags, final String binderyfronttags) {
         super(name, Hudson.getInstance());
         this.envOrder = envOrder;
         this.compOrder = compOrder;
         this.tags = tags;
         this.betaCustomers = betaCustomers;
         this.deployHistory = deployHistory;
+		
+		this.opsdbinstance = opsdbinstance;
+		this.opsdb = opsdb;
 		this.dbUser = dbUser;
 		this.dbPassword = Secret.fromString(dbPassword);
 		this.SQLauth = SQLauth;
@@ -207,6 +217,9 @@ public class EnvDashboardView extends View {
         private String tags;
         private String betaCustomers;
         private String deployHistory;
+		
+		private String opsdbinstance;
+		private String opsdb;
 		private String dbUser;
 		private String dbPassword;
 		private Boolean SQLauth;
@@ -331,6 +344,9 @@ public class EnvDashboardView extends View {
             tags = formData.getString("tags");
             betaCustomers = formData.getString("betaCustomers");
             deployHistory = formData.getString("deployHistory");
+			
+			opsdbinstance = formData.getString("opsdbinstance");
+			opsdb = formData.getString("opsdb");
 			dbUser = formData.getString("dbUser");
 			dbPassword = formData.getString("dbPassword");
 			SQLauth = formData.optBoolean("SQLauth");
@@ -433,11 +449,44 @@ public class EnvDashboardView extends View {
         return orderOfEnvs;
     }
 
-    public ArrayList<String> getOrderOfComps() {
+    public ArrayList<String> getOrderOfComps(String client, boolean all, boolean ClientRevisionSection) {
         ArrayList<String> orderOfComps;
         orderOfComps = splitCompOrder(compOrder);
         if (orderOfComps == null || orderOfComps.isEmpty()){
-            String queryString="select distinct compname from env_dashboard order by compname;";
+			
+			String queryString;
+			if (client.equals("none") && !all)
+			{
+				System.out.println("generate list of clients");
+				queryString="select distinct compname from env_dashboard where rtrim(compname) not like ('% Backend') and rtrim(compname) not like ('% CRjob') and rtrim(compname) not like ('% Web') order by compname;";
+				//queryString="select distinct compname from env_dashboard where compname in ('test', 'test Backend') order by compname;";
+			}
+			else if (!client.equals("none") && !all)
+			{
+				System.out.println(client + " client was selected");
+				if (ClientRevisionSection)
+				{
+					queryString="select distinct compname from env_dashboard where rtrim(compname) in ('" + client + "') order by compname;";
+				}
+				else
+				{
+					queryString="select distinct compname from env_dashboard where rtrim(compname) in ('" + client + "','" + client + " Backend','" + client + " CRjob','" + client + " Web') order by compname;";
+				}
+			}
+			else	
+			{
+				System.out.println("no client was selected");
+				
+				if (ClientRevisionSection)
+				{
+					queryString="select distinct compname from env_dashboard where rtrim(compname) not like ('% Backend') and rtrim(compname) not like ('% CRjob') and rtrim(compname) not like ('% Web') order by compname;";
+				}				
+				else
+				{
+					queryString="select distinct compname from env_dashboard order by compname;";
+				}
+			}
+
             try {
                 Connection conn = DBConnection.getConnection();
                 ResultSet rs = runQuery(conn, queryString);
@@ -511,6 +560,22 @@ public class EnvDashboardView extends View {
 		
         return orderOfTags;
     }
+	
+	
+	public ArrayList<String> getClients() {
+		
+		//System.out.println("At getClients function");
+		//System.out.println(type);
+		
+		ArrayList<String> orderOfClients;
+
+		//System.out.println("Getting clients now...");
+		orderOfClients = getOrderOfComps("none", false, false);
+		
+		//System.out.println(orderOfClients);
+		
+        return orderOfClients;
+    }
 
     public Integer getLimitDeployHistory() {
         Integer lastDeploy;
@@ -525,6 +590,25 @@ public class EnvDashboardView extends View {
         }
         return lastDeploy;
     }
+	
+	
+	@JavaScriptMethod
+	public String getselectedClient2() {
+        
+        return selectedclient;
+    }
+	
+	public String getselectedClient() {
+        
+        return selectedclient;
+    }
+	
+	public boolean getallClients() {
+        
+        return allclients;
+    }
+	
+	
 
     public ArrayList<String> getDeployments(String env, Integer lastDeploy) {
         if ( lastDeploy <= 0 ) {
@@ -769,11 +853,17 @@ public class EnvDashboardView extends View {
         this.deployHistory = deployHistory;
     }
 	
+	public void setopsdbinstance(final String opsdbinstance) {
+        this.opsdbinstance = opsdbinstance;
+    }
+	
+	public void setopsdb(final String opsdb) {
+        this.opsdb = opsdb;
+    }
+	
     public void setdbUser(final String dbUser) {
         this.dbUser = dbUser;
     }
-	
-	
 	
 	public void setLDAPserver(final String LDAPserver) {
         this.LDAPserver = LDAPserver;
@@ -781,6 +871,15 @@ public class EnvDashboardView extends View {
 	
 	public void setLDAPuser(final String LDAPuser) {
         this.LDAPuser = LDAPuser;
+    }
+	
+	
+	public String getopsdbinstance() {
+        return opsdbinstance;
+    }
+	
+	public String getopsdb() {
+        return opsdb;
     }
 	
 	public String getdbUser() {
@@ -1154,6 +1253,84 @@ public class EnvDashboardView extends View {
 	
 	
 	@JavaScriptMethod
+	  public String SaveSelectedClient(String client, boolean allClients) {
+	
+	   System.out.println(getCurentDateTime() + ": At SaveSelectedClient function");
+	   System.out.println(getCurentDateTime() + ": Here are the arguments passed:");
+	   System.out.println(client);
+	   System.out.println(allClients);
+	    
+		String returnString = null;
+	   
+       try {
+	   
+		   selectedclient = client;
+		   allclients = allClients;
+		   
+		   System.out.println(getCurentDateTime() + ": saved");
+		   returnString = "saved";
+       }
+	   catch (Exception e) 
+	   {
+		    System.out.println(getCurentDateTime() + ": Something failed at SaveSelectedClient function"); 
+			System.out.println(e.toString());			
+            //e.printStackTrace();  
+			returnString = "Something failed at SaveSelectedClient function: " + e.getMessage();
+       } 
+	   finally 
+	   { 
+		   	if(returnString == null)
+			{
+				returnString = "failed";
+			}
+       }
+	  
+	  
+	   return returnString;
+	   
+	   
+    }
+
+	
+	@JavaScriptMethod
+	  public String ResetSelectedClient() {
+	
+	   System.out.println(getCurentDateTime() + ": At ResetSelectedClient function");
+	   
+	   String returnString = null;
+	   
+       try {
+	   
+		   selectedclient = "noneexistingclient";
+		   allclients = false;
+
+		   
+		   System.out.println(getCurentDateTime() + ": reset");
+		   returnString = "reset";
+       }
+	   catch (Exception e) 
+	   {
+		    System.out.println(getCurentDateTime() + ": Something failed at ResetSelectedClient function"); 
+			System.out.println(e.toString());			
+            //e.printStackTrace();  
+			returnString = "Something failed at ResetSelectedClient function: " + e.getMessage();
+       } 
+	   finally 
+	   { 
+		   	if(returnString == null)
+			{
+				returnString = "failed";
+			}
+       }
+	  
+	  
+	   return returnString;
+	   
+	   
+    }
+	
+	
+	@JavaScriptMethod
 	public String maintainConnectivityToProxy() {
 	
 	   //System.out.println(getCurentDateTime() + ": At DummyFunction function");
@@ -1465,7 +1642,7 @@ public class EnvDashboardView extends View {
 
 
 		//identify the active database
-		String SQL = "use " + getOpsDB() + ";\n" +
+		String SQL = "use " + getopsdb() + ";\n" +
 			"select c.acronym as 'client_acronym', d.name as 'db_name', p.name as 'prov_name' from dbo.[database] d inner join dbo.client c on d.client_id = c.client_id\n" +
 			"										  inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
 			"										  inner join dbo.environment e on e.environment_id = p.environment_id\n" +
@@ -1509,7 +1686,7 @@ public class EnvDashboardView extends View {
 		System.out.println(job);
 
 		//identify the active server
-		SQL = "use " + getOpsDB() + ";\n" +
+		SQL = "use " + getopsdb() + ";\n" +
 		"select name from dbo.db_instance where db_instance_id in\n" +
 		"(\n" +
 		"select dbinst.db_instance_id from dbo.[database] db inner join dbo.db_instance_database dbinst on db.database_id = dbinst.database_id\n" +
@@ -1531,7 +1708,7 @@ public class EnvDashboardView extends View {
 		}
 		
 		//identify instance type
-		SQL = "use " + getOpsDB() + ";\n" +
+		SQL = "use " + getopsdb() + ";\n" +
 		"select instance_type from dbo.[server] where name = '" + activeServer + "';";
 
 		returnValue = getRequestedInfo(customer, env, SQL, "instance_type");
@@ -1567,7 +1744,7 @@ public class EnvDashboardView extends View {
 
 
 		//identify the active database
-		String SQL = "use " + getOpsDB() + ";\n" +
+		String SQL = "use " + getopsdb() + ";\n" +
 		"select [web_version], [binderyfrontend_version]\n" +
 		"from (\n" +
 		"select d.version as 'web_version', d.client_revision as 'binderyfrontend_version',\n" +
@@ -1858,18 +2035,22 @@ public class EnvDashboardView extends View {
        }
 	   
 	   //Get available instance types for a particular instance family
-	   String opsdbServer = getOpsDBinstance();
-		//Check if server is reachable
-		if (!testServerConnection(opsdbServer))
-		{
-			error = "failed " + opsdbServer + " is not reachable";
-			System.out.println(getCurentDateTime() + ": " + error);
-			returnString = error;
-			return returnString;
-		}
+	   String opsdbServer = getopsdbinstance();
+	   
+	   if (!opsdbServer.contains("opssqlprd01"))
+	   {
+			//Check if server is reachable
+			if (!testServerConnection(opsdbServer))
+			{
+				error = "failed " + opsdbServer + " is not reachable";
+				System.out.println(getCurentDateTime() + ": " + error);
+				returnString = error;
+				return returnString;
+			}
+	   }
 
 		conn2 = CustomDBConnection.getConnection(opsdbServer, getOpsDBinstancePort(), "placeholderForDB", getdbUser(), getdbPassword(), getSQLauth());
-		String SQL2 = "use " + getOpsDB() + ";\n" +
+		String SQL2 = "use " + getopsdb() + ";\n" +
 		//"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%';";
 		"select instance_type from dbo.aws_instance_types where instance_type like '" + currentInstanceTypeFamily + ".%' and instance_type <> '" + currentInstanceType + "' order by instance_type desc;";
 		
@@ -1889,7 +2070,7 @@ public class EnvDashboardView extends View {
 	   }
 
 		System.out.println(getCurentDateTime() + ": Checking how many active deployment environments exist at " + activeServer + " server...");
-		String SQL3 = "use " + getOpsDB() + ";\n" +
+		String SQL3 = "use " + getopsdb() + ";\n" +
 		    "select count(*) as 'numOfActiveEnvs'\n" +
             "	from dbo.[database] d inner join dbo.client c on d.client_id = c.client_id\n" +
             "	inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
@@ -2455,11 +2636,7 @@ public class EnvDashboardView extends View {
 		return timeStamp;
     }
 	
-	public String getOpsDBinstance()
-	{
-		String dbinstance = "qdwsqlops01";
-		return dbinstance;
-    }
+
 	
 	public String getOpsDBinstancePort()
 	{
@@ -2467,12 +2644,7 @@ public class EnvDashboardView extends View {
 		return dbinstanceport;
     }
 	
-	public String getOpsDB()
-	{
-		//String db = "opsdb_dev";
-		String db = "opsdb";
-		return db;
-    }
+
 	
 	@JavaScriptMethod
 	public String getRequestedInfo(String customer, String env, String SQL, String property) {
@@ -2487,16 +2659,18 @@ public class EnvDashboardView extends View {
 	   String returnString = null;
 	   String error = new String();
 	   	  	   
-	   String opsdbServer = getOpsDBinstance();
-		//Check if server is reachable
-		if (!testServerConnection(opsdbServer))
-		{
-			error = "failed " + opsdbServer + " is not reachable";
-			System.out.println(getCurentDateTime() + ": " + error);
-			returnString = error;
-			return returnString;
-		}
-	   
+	   String opsdbServer = getopsdbinstance();
+	   if (!opsdbServer.contains("opssqlprd01"))
+	   {
+			//Check if server is reachable
+			if (!testServerConnection(opsdbServer))
+			{
+				error = "failed " + opsdbServer + " is not reachable";
+				System.out.println(getCurentDateTime() + ": " + error);
+				returnString = error;
+				return returnString;
+			}
+	   }
 	   
 	   Connection conn = null;
        Statement stat = null;

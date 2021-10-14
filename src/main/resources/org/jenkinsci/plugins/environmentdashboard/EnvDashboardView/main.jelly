@@ -14,20 +14,196 @@
 <div id="loader"></div>
 <div id="loader2" style="display:none;"></div>
 
+
 <script>
+var selectedClient;
+var allClients;
+
 window.addEventListener('error', function (e) {
   var error = e.error;
   alert(error);
 });
 
+
+
 Q(window).load(function(){
-	setTimeout(showDashboard, 3000);
+	EnvDashViewProxy.getselectedClient2(function(t) {
+		var response10 = t.responseObject();
+		//alert(response10);
+		//alert(response10.indexOf("noneexistingclient"));
+		if (response10.indexOf("noneexistingclient") != -1)
+		{
+			//alert('calling showClientSelection function');
+			setTimeout(showClientSelection, 1000);
+			
+			
+		}
+		else
+		{
+			//alert('calling showDashboard function');
+			setTimeout(showDashboard, 1000);
+			
+			//reset Java selectedclient and allclients variables
+			EnvDashViewProxy.ResetSelectedClient(function(t) {
+					 var response11 = t.responseObject();
+					 if (response11.indexOf("failed") == -1)
+					 {
+					 
+						//something to do if needed
+					 
+					 }
+					 else
+					 {
+						Q("#dialog3").dialog("option","title","Failure");
+						Q("#dialog3text").text(response11);
+						Q("#dialog3").dialog("open");
+					 }
+					 
+			});
+		}
+
+	});
 });
+
 
 function showDashboard() {
   Q("#loader").hide();
   Q("#startDashboard").show();
 }
+
+function showClientSelection() {
+    Q("#loader").hide();
+  
+	var validationObj3;
+
+	validationObj3 = Q("#dialog5").validate({ // initialize the plugin
+		/*
+		submitHandler: function(form) {
+			doAjaxPost();
+		},*/
+		rules: {
+			clientDecision: {
+				required: true,
+				normalizer: function(value) {
+					return Q.trim(value);
+				}
+			}
+		},
+		messages: {
+			clientDecision: "client is required"
+		},
+		errorPlacement: function(error, element) {
+			if (element.attr("name") == "clientDecision")
+			{
+				error.insertAfter(element);	
+			}
+		}
+	});
+
+	Q("#dialog5").dialog({
+		autoOpen: false, 
+		modal: true,
+		draggable: true,
+		resizable: false,
+		autoResize: true,
+		width: 1000,
+		//height: 600,
+		dialogClass: "no-close",
+		buttons: {
+			OK: function (e) {
+				//Q(this).submit();
+				if(!validationObj3.form())
+				{  
+				  e.preventDefault(); 
+				}
+				else
+				{
+				
+					// Stop form from submitting normally
+					e.preventDefault();
+					
+					//alert(location.href);
+					//alert( "You are running jQuery version: " + Q.fn.jquery );
+					//alert(Q().jquery); //it is 1.12.4
+										
+					selectedClient = Q("#clientDecision").val();
+					allClients = false;
+					
+					
+					EnvDashViewProxy.SaveSelectedClient(selectedClient,allClients,function(t) {
+						 var response9 = t.responseObject();
+						 if (response9.indexOf("failed") == -1)
+						 {
+						 
+							//reload the page so new values of selectedClient and allClients variables will be presented upon page reload
+							Q("#startDashboard").hide();
+							Q("#loader").show();
+							window.location.reload(true);
+
+							/*
+							Q("#dialog3").dialog("option","title","Success");
+							Q("#dialog3text").text(response9);
+							Q("#dialog3").dialog("open");
+							*/						
+							
+							Q("#dialog5").dialog("close");
+						 
+						 }
+						 else
+						 {
+							Q("#dialog3").dialog("option","title","Failure");
+							Q("#dialog3text").text(response9);
+							Q("#dialog3").dialog("open");
+						 }
+					});
+				}
+			},
+			Cancel: function () {
+				selectedClient = "none";
+				allClients = true;
+				
+				
+				EnvDashViewProxy.SaveSelectedClient(selectedClient,allClients,function(t) {
+					 var response9 = t.responseObject();
+					 if (response9.indexOf("failed") == -1)
+					 {
+					 
+						
+						//reload the page so new values of selectedClient and allClients variables will be presented upon page reload
+						Q("#startDashboard").hide();
+						Q("#loader").show();
+						window.location.reload(true);
+						
+						/*
+						Q("#dialog3").dialog("option","title","Success");
+						Q("#dialog3text").text(response9);
+						Q("#dialog3").dialog("open");
+					   */
+					   
+					   
+					   	Q("#dialog5").trigger("reset");
+						validationObj3.resetForm();
+						Q("#dialog5").dialog("close");
+					 
+					 }
+					 else
+					 {
+						Q("#dialog3").dialog("option","title","Failure");
+						Q("#dialog3text").text(response9);
+						Q("#dialog3").dialog("open");
+					 }
+					 
+				});	
+				
+			}
+		}
+	}).prev(".ui-dialog-titlebar").css("background","#81BEF7");
+
+	Q("#dialog5").dialog("open");
+
+}
+
+
 </script>
 
 
@@ -51,7 +227,11 @@ function showDashboard() {
 					<tr align="center">
 						<th/>
 						<j:set var="orderOfEnvs" value="${it.getOrderOfEnvs()}"/>
-						<j:set var="orderOfComps" value="${it.getOrderOfComps()}"/>
+						
+						<j:set var="selectedClient" value="${it.getselectedClient()}"/>
+						<j:set var="allClients" value="${it.getallClients()}"/>
+						
+						<j:set var="orderOfComps" value="${it.getOrderOfComps(selectedClient, allClients, false)}"/>
 						<j:set var="customColumnsList" value="${it.getCustomDBColumns()}"/>
 						
 
@@ -1322,10 +1502,14 @@ function showDashboard() {
 							
 								//alert('at validVersion function');
 								
-								var splitString = Q("#webfrontendVersion").val().toLowerCase().replace('v', '').split(".");
+								var splitString = Q("#webfrontendVersion").val();
+								if (!(splitString.indexOf("redisIncrease") == -1)) {splitString = splitString.split("_")[2]};											
+								splitString = splitString.toLowerCase().replace('v', '').split(".");
 								var currentVersion = parseInt(splitString[0], 10);
 
-								splitString = value.toLowerCase().replace('v', '').split(".");
+								splitString = value;
+								if (!(splitString.indexOf("redisIncrease") == -1)) {splitString = splitString.split("_")[2]};
+								splitString = splitString.toLowerCase().replace('v', '').split(".");
 								var futureVersion = parseInt(splitString[0], 10);
 
 								//console.log(currentVersion);
@@ -1810,6 +1994,7 @@ function showDashboard() {
 							
 							Q("#showHideCBS").click(function(){
 								
+								//alert('showHideCBS button was clicked');
 								
 								if (Q('#' + Q("#clientAcronym").val() + "_clientVersions").is(":hidden"))
 								{
@@ -2206,8 +2391,10 @@ function showDashboard() {
 						{
 							if (Q("#ClientRevisionDecision").val() == "yes")
 							{
+								
 								Q("#ClientRevisionSection").show(500);
 								Q('#' + Q("#clientAcronym").val() + "_clientVersions").show(500);
+								
 							}
 							else
 							{
@@ -2622,10 +2809,15 @@ function showDashboard() {
 										else
 										{
 										
-											var splitString = Q("#webVersion").val().toLowerCase().replace('v', '').split(".");
+											
+											var splitString = Q("#webVersion").val();
+											if (!(splitString.indexOf("redisIncrease") == -1)) {splitString = splitString.split("_")[2]};											
+											splitString = splitString.toLowerCase().replace('v', '').split(".");
 											var currentVersion = parseInt(splitString[0], 10);
 
-											splitString = Q("#web_version").val().toLowerCase().replace('v', '').split(".");
+											splitString = Q("#web_version").val();
+											if (!(splitString.indexOf("redisIncrease") == -1)) {splitString = splitString.split("_")[2]};
+											splitString = splitString.toLowerCase().replace('v', '').split(".");
 											var futureVersion = parseInt(splitString[0], 10);
 
 											if (currentVersion == futureVersion)
@@ -3339,7 +3531,10 @@ function showDashboard() {
 							var branch;
 							
 							var cleanedVersion = version;
-							var parsedShortWebVersion = (cleanedVersion.replace('v','').split(".")[0] + "." + cleanedVersion.replace('v','').split(".")[1] + "." + cleanedVersion.replace('v','').split(".")[2]).replace('undefined',0);
+							if (!(cleanedVersion.indexOf("redisIncrease") == -1)) {cleanedVersion = cleanedVersion.split("_")[2]};
+							var parsedShortWebVersion = (cleanedVersion.replace('v','').replace('V','').split(".")[0] + "." + cleanedVersion.replace('v','').replace('V','').split(/[._-]/)[1] + "." + cleanedVersion.replace('v','').replace('V','').split(/[._-]/)[2]).replace('undefined',0);
+							
+							
 							
 							if (versionCompare(parsedShortWebVersion, "5.2.6", options) &lt; 0)
 							{
@@ -3353,9 +3548,13 @@ function showDashboard() {
 							{
 								branch = "deploy-5.3";
 							}
-							else if (versionCompare(parsedShortWebVersion, "6.0.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.0.0", options) === 0)
+							else if (versionCompare(parsedShortWebVersion, "6.2", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "6.0.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.0.0", options) === 0))
 							{
 								branch = "deploy-6.0";
+							}
+							else if (versionCompare(parsedShortWebVersion, "6.2.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.2.0", options) === 0)
+							{
+								branch = "deploy-6.2";
 							}
 							else
 							{
@@ -3532,7 +3731,13 @@ function showDashboard() {
 		<label id="ClientRevisionLabel">Selected client revision</label>
 		<div class="divider"/><input type="text" id="ClientRevision" name="ClientRevision" readonly="readonly"/><br></br>
 		<button type="button" id="showHideCBS">Show/Hide client builds</button><br></br>
+		
 		<!-- Show history of last client builds  -->
+		<j:set var="selectedClient" value="${it.getselectedClient()}"/>
+		<j:set var="allClients" value="${it.getallClients()}"/>
+		<j:set var="orderOfComps" value="${it.getOrderOfComps(selectedClient, allClients, true)}"/>
+		<!-- <h3>${orderOfComps}</h3> -->
+		
 		<j:forEach items="${orderOfComps}" var="comp">
 			<div id="${comp}_clientVersions" style="display: none; height:200px; overflow: auto;">
 				<label id="requestforSHA">Please select the stable build (client version) to deploy after core upgrade during backend deployment     </label>
@@ -3847,5 +4052,23 @@ function showDashboard() {
 		</div>
 		
 	</div>
+</form>
+<form id="dialog5" title="Pick a client" style="display:none;" autocomplete="off">
+	
+	<!-- dropdown menu for clients-->
+	<j:set var="clients" value="${it.getClients()}"/>
+	<div id="existing-clients" style="text-align: left">
+		<div class="divider"/><div class="divider"/>
+		<label id="clientRequest">Please select a client to deploy to</label><div class="divider"/>
+		<select id="clientDecision" name="clientDecision">
+			<option value="">Choose...</option>
+			<code>
+				<j:forEach items="${clients}" var="client">
+					<option value="${client}">${client}</option>
+				</j:forEach>
+			</code>	
+		</select>
+	</div>	
+	
 </form>
 </j:jelly>
