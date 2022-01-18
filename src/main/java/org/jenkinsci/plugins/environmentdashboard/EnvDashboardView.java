@@ -1113,12 +1113,53 @@ public class EnvDashboardView extends View {
 	
 	
 	@JavaScriptMethod
-	  public String AddCRjobSteps(String server, String job_name, JSONObject CRjobData) {
+	  public String AddCRjobSteps(String server, String job_name, JSONObject CRjobData, String customer, String env) {
 	
 	   System.out.println(getCurentDateTime() + ": At AddCRjobSteps function");
 	   System.out.println(getCurentDateTime() + ": Here are the arguments passed:");
 	   System.out.println(server);
 	   System.out.println(job_name);
+	   
+	    String provEnv = null;
+		String returnString = null;
+		String returnValue = null;
+		
+		if (env.contains("RPL"))
+		{
+			returnValue = "success";
+		}
+		else
+		{
+			returnValue = getActiveDBprovEnvAndServerSQLquery(customer, env);
+		}
+		
+		
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			if (env.contains("RPL"))
+			{
+				//nothing to do here for now
+				
+			}
+			else
+			{
+				
+				String[] arrOfStr = returnValue.split(",");
+				//for (String a: arrOfStr)
+				  //  System.out.println(a);
+					
+				provEnv = arrOfStr[1];
+				System.out.println(provEnv);
+				
+			}
+		}
+	   
 	   
 	   //Prepare SQL statements
 	   String SQLdelete = "USE msdb;\n" +
@@ -1139,11 +1180,13 @@ public class EnvDashboardView extends View {
 		String command = null;
 		int on_success_action = 0;
 		int on_fail_action = 0;
+		String proxy_name = null;
 	  
        Connection conn = null;
        Statement stat = null;
 	   String error = new String();
-	   String returnString = null;
+	   
+	   //String returnString = null;
 	   
 	   
 	   
@@ -1207,7 +1250,6 @@ public class EnvDashboardView extends View {
 			   step_name = step_name.replace("'","''");
 			   command = command.replace("'","''");
 			   
-			   
 			   String SQL = "USE msdb;\n" +
 					"EXEC dbo.sp_add_jobstep  \n" +
 					"    @job_name = N'" + job_name + "',  \n" +
@@ -1215,7 +1257,33 @@ public class EnvDashboardView extends View {
 					"	@subsystem = N'" + subsystem + "', \n" +
 					"	@command = N'" + command + "', \n" +
 					"	@on_success_action = " + on_success_action + ", \n" +
-					"	@on_fail_action = " + on_fail_action + ";";
+					"	@on_fail_action = " + on_fail_action;
+			   
+
+			   if (subsystem.equals("CmdExec"))
+			   {
+				   
+				   if (env.contains("RPL"))
+				   {
+					   String envNum = server.substring(Math.max(server.length() - 2, 0));
+					   proxy_name = "PROXY_SQLBackup_PRD" + envNum;
+				   }
+				   else
+				   {
+					proxy_name = "PROXY_SQLBackup_" + provEnv;
+				   }
+				   
+				   
+				   SQL = SQL + ", \n" +
+					"	@proxy_name = " + proxy_name;
+			   }
+			   else
+			   {
+				   proxy_name = null;
+			   }
+			   
+			   System.out.println("the value of subsystem variable: " + subsystem);
+			   System.out.println("the value of proxy_name variable: " + proxy_name);
 			   
 			   
 				System.out.println(getCurentDateTime() + ": About to execute SQL query...");
@@ -1348,13 +1416,25 @@ public class EnvDashboardView extends View {
 	   String error = new String();
 	   String activeDB = null;
 	   String activeServer = null;
+	   //String replicaServer = null;
+	   String returnValue = null;
 		
 	   System.out.println(getCurentDateTime() + ": At getCRjobStepsSQLquery function");
 	   System.out.println(getCurentDateTime() + ": Here is the change request job passed to getCRjobStepsSQLquery function:");
 	   System.out.println(job);
 	   
 		
-		String returnValue = getActiveDBprovEnvAndServerSQLquery(customer, env);
+		if (env.contains("RPL"))
+		{
+			returnValue = determineReplicaServerSQLquery(customer, env);
+		}
+		else
+		{
+			returnValue = getActiveDBprovEnvAndServerSQLquery(customer, env);
+		}
+		
+		
+		
 		if(returnValue.contains("failed"))
 		{
 			System.out.println(returnValue);
@@ -1363,18 +1443,28 @@ public class EnvDashboardView extends View {
 		}
 		else
 		{
-
-			String[] arrOfStr = returnValue.split(",");
-			//for (String a: arrOfStr)
-			  //  System.out.println(a);
 			
-			activeDB = arrOfStr[0];
-			System.out.println(activeDB);
+			if (env.contains("RPL"))
+			{
+				activeServer = returnValue;
+				System.out.println("replica server is " + activeServer);
+			}
+			else
+			{
+				String[] arrOfStr = returnValue.split(",");
+				//for (String a: arrOfStr)
+				  //  System.out.println(a);
+				
+				activeDB = arrOfStr[0];
+				System.out.println(activeDB);
+				
+				activeServer = arrOfStr[2];
+				System.out.println(activeServer);
 			
-			activeServer = arrOfStr[2];
-			System.out.println(activeServer);
+			}
+		}
 			
-		}			
+			
 	  
 	  
 	  	//String activeServer = "TESTSQLTST04";
@@ -1383,6 +1473,7 @@ public class EnvDashboardView extends View {
 	   //Check if server is reachable
 	   if (!testServerConnection(activeServer))
 	   {
+		    System.out.println(getCurentDateTime() + ": about to test connectivity towards " + activeServer);
 			error = "failed " + activeServer + " is not reachable";
 			System.out.println(getCurentDateTime() + ": " + error);
 			returnString = error + " failedAtgetCRjobStepsSQLquery";
@@ -1574,7 +1665,7 @@ public class EnvDashboardView extends View {
 						  .add("last_run_outcome", mappedLastRunOutcome)
 						  .add("current_execution_status", mappedCurrentExecutionStatus)
 						  .add("current_execution_step", rs.getString("current_execution_step"))
-						  .add("activeDB", activeDB)
+						  //.add("activeDB", activeDB)
 						  .add("activeServer", activeServer)
 					  .build());
 			   }
@@ -1731,6 +1822,53 @@ public class EnvDashboardView extends View {
 	
 	}
 	
+	
+	
+	@JavaScriptMethod
+	public String determineReplicaServerSQLquery(String customer, String env) 
+	{
+	
+		String returnString = null;
+		String replicaServer = null;
+
+		System.out.println(getCurentDateTime() + ": At determineReplicaServerSQLquery function");
+
+
+		//identify replica server	
+		String SQL = "use " + getopsdb() + ";\n" +
+			"select distinct s.name as 'replica_server' from OpsDB.dbo.db_instance_database dbidb inner join OpsDB.dbo.db_instance dbi on dbidb.db_instance_id = dbi.db_instance_id\n" +
+			"																						   inner join OpsDB.dbo.[database] d on dbidb.database_id = d.database_id\n" +
+			"																						   inner join OpsDB.dbo.[server] s on s.server_id = dbi.server_id\n" +
+			"																						   inner join OpsDB.dbo.client c on c.client_id = d.client_id\n" +
+			"																						   inner join OpsDB.dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
+			"																						   inner join OpsDB.dbo.environment e on e.environment_id = p.environment_id\n" +
+			"																						   inner join OpsDB.dbo.status st on st.status_id = s.status_id\n" +
+			"	where instance_purpose = 'SQL Replica' and instance_state <> 'terminated' and c.acronym = '" + customer + "' and d.name like '%warehouse%' and e.name = 'prd' and st.name = 'Active';";
+
+
+		String returnValue = getRequestedInfo(customer, env, SQL, "replica_server");
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			replicaServer = returnValue;
+			//System.out.println(replicaServer);
+			
+		}
+
+
+		returnString = replicaServer;
+		
+		return returnString;
+	
+	}
+
+
+
 	
 	@JavaScriptMethod
 	public String retrieveWebBinderyFrontEndVersionsSQLquery(String customer, String env) 

@@ -343,7 +343,7 @@ function showClientSelection() {
 														<td>
 														  <code>
 															
-																<j:if test="${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1] != null}">
+																<j:if test="${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1] != null &amp;&amp; envsHeader.indexOf('PRD6') == -1}">
 	 
 																   <j:if test="${comp.indexOf('Backend') == -1 &amp;&amp; comp.indexOf('CRjob') == -1 &amp;&amp; comp.indexOf('Web') == -1}">
 																		<j:switch on="${deployment.get('buildstatus')}">
@@ -557,7 +557,7 @@ function showClientSelection() {
 										</div>
 										<div align="right">
 											<code>
-												<j:if test="${orderOfEnvs[orderOfEnvs.indexOf(env)+1] != null}">
+												<j:if test="${orderOfEnvs[orderOfEnvs.indexOf(env)+1] != null &amp;&amp; env.indexOf('PRD6') == -1}">
 													<j:if test="${orderOfEnvs.indexOf(env) != 0}">
 											
 															<j:if test="${comps.indexOf('Backend') == -1 &amp;&amp; comps.indexOf('CRjob') == -1 &amp;&amp; comps.indexOf('Web') == -1}">
@@ -616,7 +616,7 @@ function showClientSelection() {
 												
 												
 												   <!-- DROPDOWN MENUS FOR PERFORMING BACKEND DEPLOYMENTS under 'Last Commit' column-->
-													<j:if test="${comps.indexOf('Backend') != -1}">  
+													<j:if test="${comps.indexOf('Backend') != -1 &amp;&amp; env_promote.indexOf('RPL') == -1}">  
 													<j:set var="tags" value="${it.getOrderOfTags(comps,env_promote)}"/>
 													
 														 <j:set var="SpaceIndex" value="${comps.indexOf(' ',1)}"/>
@@ -644,7 +644,7 @@ function showClientSelection() {
 													</j:if>
 													
 													<!-- PROMOTE LINKS under 'Last Commit' column -->
-													<j:if test="${comps.indexOf('Backend') == -1 &amp;&amp; comps.indexOf('CRjob') == -1 &amp;&amp; comps.indexOf('Web') == -1}"> 
+													<j:if test="${comps.indexOf('Backend') == -1 &amp;&amp; comps.indexOf('CRjob') == -1 &amp;&amp; comps.indexOf('Web') == -1 &amp;&amp; env_promote.indexOf('RPL') == -1}"> 
 														<div style="margin-right:30px; float:right;">
 															<j:switch on="${deployment.get('buildstatus')}">
 																<j:case value="SUCCESS">
@@ -667,7 +667,7 @@ function showClientSelection() {
 													</j:if>
 													
 												   <!-- DROPDOWN MENUS FOR PERFORMING WEB DEPLOYMENTS under 'Last Commit' column-->
-													<j:if test="${comps.indexOf('Web') != -1}">  
+													<j:if test="${comps.indexOf('Web') != -1 &amp;&amp; env_promote.indexOf('RPL') == -1}">  
 													<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web', false)}"/>
 															
 														<div class="dropdown" style="float:right;">
@@ -883,9 +883,18 @@ function showClientSelection() {
 
 										if (!invalidStep)
 										{
+											var server;
 											//alert(CRjobStepsJSONobj);
-
-											 EnvDashViewProxy.AddCRjobSteps(Q("#activeServer").val(),CRjob,CRjobStepsJSONobj,function(t) {
+											 if (Q("#environment").val() == "RPL")
+											 {
+												server = Q("#replicaServer").val();
+											 }
+											 else
+											 {
+												server = Q("#activeServer").val();
+											 }
+											 
+											 EnvDashViewProxy.AddCRjobSteps(server,CRjob,CRjobStepsJSONobj,Q("#clientAcronym").val(),Q("#environment").val(),function(t) {
 												 response4 = t.responseObject();
 												 if (response4.indexOf("failed") == -1)
 												 {
@@ -1281,13 +1290,17 @@ function showClientSelection() {
 									},
 									on_fail_actionDecision: {
 										required: true
+									},
+									commandTypeDecision: {
+										required: true
 									}
 								},
 								messages: {
 									stepname: "step name is required",
 									SQLscript: "command is required",
 									on_success_actionDecision: "selection is required",
-									on_fail_actionDecision: "selection is required"
+									on_fail_actionDecision: "selection is required",
+									commandTypeDecision: "selection is required"
 								},
 								errorPlacement: function(error, element) {
 									if (element.attr("name") == "stepname")
@@ -1339,7 +1352,9 @@ function showClientSelection() {
 												Q("#actualCRjobstepsTable").find("#" + id + "").find("#step_name").text(Q("#stepname").val().trim());
 												Q("#actualCRjobstepsTable").find("." + id + "_for_command_retrieval").text(Q("#SQLscript").val());
 												Q("#actualCRjobstepsTable").find("#" + id + "").find("#command_substring").text(Q("#SQLscript").val().substring(0, 14));
-												Q("#actualCRjobstepsTable").find("#" + id + "").find("#subsystem").text("TSQL");
+												
+												//Q("#actualCRjobstepsTable").find("#" + id + "").find("#subsystem").text("TSQL");
+												Q("#actualCRjobstepsTable").find("#" + id + "").find("#subsystem").text(Q("#commandTypeDecision").val());
 												
 												//Q("#actualCRjobstepsTable").find("#" + id + "").find("#on_success_action").text(Q("#on_success_actionDecision").find(":selected").text());
 												//Q("#actualCRjobstepsTable").find("#" + id + "").find("#on_fail_action").text(Q("#on_fail_actionDecision").find(":selected").text());
@@ -1347,6 +1362,8 @@ function showClientSelection() {
 												Q("#actualCRjobstepsTable").find("#" + id + "").find("#on_success_action").text(Q("#on_success_actionDecision").val());
 												Q("#actualCRjobstepsTable").find("#" + id + "").find("#on_fail_action").text(Q("#on_fail_actionDecision").val());
 											
+												
+												
 												Q(this).dialog("close");
 												
 											}
@@ -1405,7 +1422,11 @@ function showClientSelection() {
 													Q("#actualCRjobstepsTable").append('<tr id="' + next_step_id + '">' +
 														 '<td id="step_id" style="width: 8%;text-align:center">' + next_step_id + '</td>' +
 														 '<td id="step_name" style="width: 8%;text-align:center">' + Q("#stepname").val().trim() + '</td>' +
-														 '<td id="subsystem" style="width: 8%;text-align:center">' + "TSQL" + '</td>' +
+														 
+														 //'<td id="subsystem" style="width: 8%;text-align:center">' + "TSQL" + '</td>' +
+														 '<td id="subsystem" style="width: 8%;text-align:center">' + Q("#commandTypeDecision").val() + '</td>' +
+														 
+														 
 														 '<td id="command_substring" style="width: 8%;text-align:center">' + Q("#SQLscript").val().substring(0, 14) + '...</td>' +
 														 //'<td style="width: 8%;text-align:center;visibility:hidden"><textarea class="' + next_step_id + '_for_command_retrieval">' + element.command + '</textarea></td>' +	 
 														
@@ -1482,6 +1503,7 @@ function showClientSelection() {
 									Q("#on_success_actionDecision").val(Q('#actualCRjobstepsTable').find('#' + id + "").find('#on_success_action').text());
 									Q("#on_fail_actionDecision").val(Q('#actualCRjobstepsTable').find('#' + id + "").find('#on_fail_action').text());
 									
+									Q("#commandTypeDecision").val(Q('#actualCRjobstepsTable').find('#' + id + "").find('#subsystem').text());
 									
 									Q("#dialog4").dialog("open");
 								}
@@ -1629,8 +1651,13 @@ function showClientSelection() {
 								Q("#on_success_actionDecision").val("");
 								Q("#on_fail_actionDecision").val("");
 								
+								Q("#commandTypeDecision").val("");
+								Q("#SQLscript").attr("placeholder", "");
+
+								
 								Q("#dialog4").dialog("option","title","New step");
 								Q("#dialog4").dialog("open");
+								Q("#parse").hide();
 							});
 
 							
@@ -1934,6 +1961,7 @@ function showClientSelection() {
 							
 							Q("#njStartStepDecision").change(ChecknjStartStepDecision);
 							
+							Q("#commandTypeDecision").change(CheckcommandTypeDecision);
 							
 							Q("#datetimepicker").datetimepicker({
 							    lang: 'en-US',
@@ -2063,17 +2091,27 @@ function showClientSelection() {
 							//console.log(jobDetails.next_run_schedule_id);
 							//console.log(jobDetails.next_run_date);
 							//console.log(jobDetails.next_run_time);
+							//console.log(jobDetails.enabledStatus);
+							
 							//console.log("The retrieved NJ next run date and time from client server is " + jobDetails.next_run_date_time);
+							//console.log("The retrieved NJ status is " + jobDetails.enabledStatus);
 							
 							var NJ = jobDetails.job;
 							var NextRunScheduleID = jobDetails.next_run_schedule_id;
 							var NextRunDate = jobDetails.next_run_date;
 							var NextRunTime = jobDetails.next_run_time;
 							var NextRunDateTimeForConv = jobDetails.next_run_date_time;
+							var NJstatus = jobDetails.enabledStatus;
 						
 						    var validTime;
 							
-							if (NextRunScheduleID != 0 &amp;&amp; NextRunDate != 0)
+							
+						    if (NJstatus == "disabled")
+							{
+								//alert(NJ + " is disabled");
+								validTime = false;
+							}
+							else if (NextRunScheduleID != 0 &amp;&amp; NextRunDate != 0)
 							{
 								validTime = true;
 							}
@@ -2323,11 +2361,11 @@ function showClientSelection() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2493,6 +2531,21 @@ function showClientSelection() {
 						}
 						
 						
+						function CheckcommandTypeDecision()
+						{
+							if (Q("#commandTypeDecision").val() == "TSQL")
+							{
+								Q("#parse").show(500);
+								Q("#SQLscript").attr("placeholder", "Please enter SQL script and make sure to specify name(s) of the database(s) in the query...");
+							}
+							else
+							{
+								Q("#parse").hide(500);
+								Q("#SQLscript").attr("placeholder", "");
+							}
+						}
+						
+						
 						function showClientDepDynamicDialog(comp, env, buildNum) 
 						{
 						
@@ -2500,11 +2553,11 @@ function showClientSelection() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2584,11 +2637,11 @@ function showClientSelection() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -2627,7 +2680,15 @@ function showClientSelection() {
 									 
 									Q("#environment").val(env);
 									  
-									getNightlyjobSteps();
+									  
+									if (env == "RPL")
+									{
+										determineReplicaServer();	
+									}
+									else
+									{
+										getNightlyjobSteps();
+									}
 									
 								 }
 
@@ -2651,11 +2712,11 @@ function showClientSelection() {
 							if (authorizedForPRDactions != "TBD")
 							{
 								var proceed = false;
-								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								if (authorizedForPRDactions == "authorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									proceed = true;
 								}								
-								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6"))
+								else if (authorizedForPRDactions == "unauthorized" &amp;&amp; (env == "PRD" || env == "PRD6" || env == "RPL"))
 								{
 									//alert('You are not authorized to access client PRD environments')
 									Q("#dialog3").dialog("option","title","Warning");
@@ -3044,6 +3105,85 @@ function showClientSelection() {
 						
 						}
 						
+						function determineReplicaServer()
+						{
+						
+							//Get the steps
+							var response12 = "";
+							EnvDashViewProxy.determineReplicaServerSQLquery(Q("#clientAcronym").val(),Q("#environment").val(), function(t) {
+								 response12 = t.responseObject();
+								 
+								
+								 if (response12.indexOf("failed") == -1)
+								 {
+									/*
+									Q("#dialog3").dialog("option","title","Debug");
+									Q("#dialog3text").text(response12);
+									Q("#dialog3").dialog("open");
+									*/
+									 
+
+									 //Get information on replica server
+									 Q("#replicaServer").val(response12);									
+									
+									Q("#loader2").hide();
+									Q("#dialog").show();
+									
+									if (noInitialEnv)
+									{
+										Q("#overlay2").hide();
+										Q("#PRDsection").show(500);
+									}
+									else
+									{
+										Q("#dialogTitle").text("Deploying " + Q("#clientAcronym").val() + " to " + Q("#environment").val() + " for " + Q("#build_num").val() + " &#x2192; " + Q("#replicaServer").val());
+										Q("#dialogTitle").css("background-color", "#81BEF7");
+										Q("#PRDsection").show();
+									}
+									
+									if (typeofDeployment == "CRjob")
+									{
+										Q("#dialogTitle").text("Change request " + Q("#clientAcronym").val() + " to " + Q("#environment").val() + " &#x2192; " + Q("#replicaServer").val());
+										Q("#dialogTitle").css("background-color", "#81BEF7");
+
+										Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection, #resizeServerSection, #startNJSection").hide();
+										Q("#prd-env-cr-job").show();
+										Q("#datetimepickerLabel").text("Change Request job kick off date and time");
+
+									}
+
+									
+									//Q("#schedActivitySection").show();
+									Q("#kickoffDateTimeSection").show();
+									
+									
+								 }
+								 else
+								 {
+									Q("#loader2").hide();
+									
+									
+									if (noInitialEnv)
+									{
+										Q("#overlay2").hide();
+										
+									}
+									else
+									{
+										Q("#overlay").hide();
+									}
+									
+									Q("#dialog3").dialog("option","title","Error");
+									Q("#dialog3text").text(response12);
+									Q("#dialog3").dialog("open");
+								 }
+								 
+								 
+							});
+
+						
+						}
+						
 						function getNightlyjobSteps()
 						{
 						
@@ -3087,7 +3227,8 @@ function showClientSelection() {
 											  next_run_schedule_id: element.next_run_schedule_id,
 											  next_run_date: element.next_run_date,
 											  next_run_time: element.next_run_time,
-											  next_run_date_time: element.next_run_date_time
+											  next_run_date_time: element.next_run_date_time,
+											  enabledStatus: element.enabledStatus
 											};
 											
 											//console.log(NJdetails.job);
@@ -3215,7 +3356,8 @@ function showClientSelection() {
 												  next_run_schedule_id: element.next_run_schedule_id,
 												  next_run_date: element.next_run_date,
 												  next_run_time: element.next_run_time,
-												  next_run_date_time: element.next_run_date_time
+												  next_run_date_time: element.next_run_date_time,
+												  enabledStatus: element.enabledStatus
 												};
 												
 												//console.log(NJStartdetails.job);
@@ -3266,13 +3408,13 @@ function showClientSelection() {
 										Q("#dialogTitle").css("background-color", "#81BEF7");
 
 										Q("#startCRjobSection, #noRollbackSection, #runQASQLscriptSection, #resizeServerSection").hide();
-										Q("#prd-env-cr-job").show();
+										Q("#prd-env-cr-job, #startNJSection").show();
 										Q("#datetimepickerLabel").text("Change Request job kick off date and time");
 
 									}
 									else if (typeofDeployment == "client" || typeofDeployment == "backend")
 									{
-										Q("#startCRjobSection, #noRollbackSection").show();
+										Q("#startCRjobSection, #noRollbackSection, #startNJSection").show();
 										
 										
 										Q("#datetimepickerLabel").text("Deployment kick off date and time");
@@ -3866,9 +4008,10 @@ function showClientSelection() {
 			<br></br><br></br>	
 		</div>
 		
+		<div id="startNJSection">
 		<input type="checkbox" id="startnj"></input>
 		<label id="startnjlabel" for="startnj"> Placeholder for previous activities</label><br></br>
-		
+		</div>
 
 		<div id="prd-env" style="text-align: left">
 			<label id="njStartStepLabelQuestion">Do you want to start nightly job from a specific step (If No, the NJ will start from configured step which is usually step 1)?</label><div class="divider"/>
@@ -4011,6 +4154,7 @@ function showClientSelection() {
 	
 	<input type="hidden" id="activeDB" value=""/>
 	<input type="hidden" id="activeServer" value=""/>
+	<input type="hidden" id="replicaServer" value=""/>
 	
 </form>
 <div id="dialog3" title="Title place holder" style="display:none;">
@@ -4021,6 +4165,16 @@ function showClientSelection() {
 		<label id="stepnameLabel">Step name:</label><div class="divider"/><input id="stepname" name="stepname" type="text" size="25" placeholder="Jira Ticket and step number"/><br></br>
 		<br></br>
 		
+		<label id="commandTypeLabel">Type:</label><div class="divider"/>
+		<select id="commandTypeDecision" name="commandTypeDecision">
+			<option value="">Choose...</option>
+			<option value="TSQL">TSQL</option>
+			<option value="CmdExec">CmdExec</option>
+		</select>
+		<div class="divider"/><div class="divider"/><div class="divider"/>
+		
+		<br></br><br></br><br></br>
+		
 		<div id="commmandLabelAndParseSection">
 			<label id="commandLabel">Command:</label>
 			<br></br><br></br>
@@ -4028,7 +4182,7 @@ function showClientSelection() {
 		</div>
 		
 		<div id="textAreaSection">
-			<textarea id="SQLscript" name="SQLscript" style="margin-left:10px;" rows="20" cols="90" placeholder="Please enter SQL script and make sure to specify name(s) of the database(s) in the query..."></textarea>
+			<textarea id="SQLscript" name="SQLscript" style="margin-left:10px;" rows="20" cols="90" placeholder=""></textarea>
 			<br></br>
 			<label id="SQLscriptRequired"></label>
 		</div>
