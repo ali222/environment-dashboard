@@ -1416,6 +1416,7 @@ public class EnvDashboardView extends View {
 	   String error = new String();
 	   String activeDB = null;
 	   String activeServer = null;
+	   String WindowsServerVersion = null;
 	   //String replicaServer = null;
 	   String returnValue = null;
 		
@@ -1446,8 +1447,12 @@ public class EnvDashboardView extends View {
 			
 			if (env.contains("RPL"))
 			{
-				activeServer = returnValue;
+				String[] arrOfStr4 = returnValue.split(",");
+				activeServer = arrOfStr4[0];
 				System.out.println("replica server is " + activeServer);
+				
+				WindowsServerVersion = arrOfStr4[1];
+				System.out.println(WindowsServerVersion);
 			}
 			else
 			{
@@ -1460,6 +1465,9 @@ public class EnvDashboardView extends View {
 				
 				activeServer = arrOfStr[2];
 				System.out.println(activeServer);
+				
+				WindowsServerVersion = arrOfStr[4];
+				System.out.println(WindowsServerVersion);
 			
 			}
 		}
@@ -1528,6 +1536,7 @@ public class EnvDashboardView extends View {
 		   JsonArray arr = null;
 		   JsonObject joSteps = null;
 		   JsonObject joInfo = null;
+		   JsonObject joWindowsServerVersion = null;
 		
 		   String retrievedJob = null;
 
@@ -1541,6 +1550,18 @@ public class EnvDashboardView extends View {
 				retrievedJob = rs.getString("name");
 			}
 
+
+			//Get Windows OS version
+			System.out.println(getCurentDateTime() + ": Check Windows OS version...");
+			jarr.add(Json.createObjectBuilder()
+				  .add("windows_server_version", WindowsServerVersion)
+			  .build());
+
+			arr = jarr.build();
+			joWindowsServerVersion = Json.createObjectBuilder().add("windowsserverversion", arr).build();
+			System.out.println(joWindowsServerVersion);
+
+
 			if (retrievedJob == null || retrievedJob.isEmpty())
 			{
 				System.out.println(getCurentDateTime() + ": " + job + " doesn't exist");
@@ -1551,8 +1572,23 @@ public class EnvDashboardView extends View {
 				arr = jarr.build();
 			    joInfo = Json.createObjectBuilder().add("info", arr).build();
 			    System.out.println(joInfo);
-			   
-			    returnString = joInfo.toString();	
+				
+				
+			   //Combine two json objects
+			   JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
+
+				for (String key : joWindowsServerVersion.keySet()) {
+					jsonObjectBuilder.add(key, joWindowsServerVersion.get(key));
+				}
+				for (String key : joInfo.keySet()) {
+					jsonObjectBuilder.add(key, joInfo.get(key));
+				}
+				 
+				JsonObject combinedStepsAndInfo = jsonObjectBuilder.build();
+				System.out.println(combinedStepsAndInfo);
+				
+				returnString = combinedStepsAndInfo.toString();
+			
 			}
 			else
 			{
@@ -1677,6 +1713,9 @@ public class EnvDashboardView extends View {
 				//Combine two json objects
 			   JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
 
+				for (String key : joWindowsServerVersion.keySet()) {
+					jsonObjectBuilder.add(key, joWindowsServerVersion.get(key));
+				}
 				for (String key : joSteps.keySet()) {
 					jsonObjectBuilder.add(key, joSteps.get(key));
 				}
@@ -1688,10 +1727,7 @@ public class EnvDashboardView extends View {
 				System.out.println(combinedStepsAndInfo);
 				
 				
-			
 				returnString = combinedStepsAndInfo.toString();
-				
-				
 				
 			}
 	   
@@ -1728,6 +1764,7 @@ public class EnvDashboardView extends View {
 		String provEnv = null;
 		String activeServer = null;
 		String currentInstanceType = null;
+		String WindowsServerVersion = null;
 
 		System.out.println(getCurentDateTime() + ": At getActiveDBprovEnvAndServerSQLquery function");
 
@@ -1816,7 +1853,32 @@ public class EnvDashboardView extends View {
 			
 		}
 		
-		returnString = activeDB + "," + provEnv + "," + activeServer + "," + currentInstanceType;
+		
+		//Identify Windows Server version
+		SQL = "use " + getopsdb() + ";\n" +
+		"select ltrim(rtrim(operating_system)) as 'operating_system' from dbo.[server] where name = '" + activeServer + "';";
+
+		returnValue = getRequestedInfo(customer, env, SQL, "operating_system");
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			String[] arrOfStr3 = returnValue.split(" ");
+			//for (String a: arrOfStr3)
+			  //  System.out.println(a);
+
+			WindowsServerVersion = arrOfStr3[3];
+			//System.out.println(WindowsServerVersion);
+			
+		}
+		
+		
+		
+		returnString = activeDB + "," + provEnv + "," + activeServer + "," + currentInstanceType + "," + WindowsServerVersion;
 		
 		return returnString;
 	
@@ -1830,20 +1892,21 @@ public class EnvDashboardView extends View {
 	
 		String returnString = null;
 		String replicaServer = null;
+		String WindowsServerVersion = null;
 
 		System.out.println(getCurentDateTime() + ": At determineReplicaServerSQLquery function");
 
 
 		//identify replica server	
 		String SQL = "use " + getopsdb() + ";\n" +
-			"select distinct s.name as 'replica_server' from OpsDB.dbo.db_instance_database dbidb inner join OpsDB.dbo.db_instance dbi on dbidb.db_instance_id = dbi.db_instance_id\n" +
-			"																						   inner join OpsDB.dbo.[database] d on dbidb.database_id = d.database_id\n" +
-			"																						   inner join OpsDB.dbo.[server] s on s.server_id = dbi.server_id\n" +
-			"																						   inner join OpsDB.dbo.client c on c.client_id = d.client_id\n" +
-			"																						   inner join OpsDB.dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
-			"																						   inner join OpsDB.dbo.environment e on e.environment_id = p.environment_id\n" +
-			"																						   inner join OpsDB.dbo.status st on st.status_id = s.status_id\n" +
-			"	where instance_purpose = 'SQL Replica' and instance_state <> 'terminated' and c.acronym = '" + customer + "' and d.name like '%warehouse%' and e.name = 'prd' and st.name = 'Active';";
+			"select distinct s.name as 'replica_server' from dbo.db_instance_database dbidb inner join dbo.db_instance dbi on dbidb.db_instance_id = dbi.db_instance_id\n" +
+			"																						   inner join dbo.[database] d on dbidb.database_id = d.database_id\n" +
+			"																						   inner join dbo.[server] s on s.server_id = dbi.server_id\n" +
+			"																						   inner join dbo.client c on c.client_id = d.client_id\n" +
+			"																						   inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
+			"																						   inner join dbo.environment e on e.environment_id = p.environment_id\n" +
+			"																						   inner join dbo.status st on st.status_id = s.status_id\n" +
+			"	where instance_purpose = 'SQL Replica' and instance_state <> 'terminated' and c.acronym = '" + customer + "' and d.name like '%warehouse%' and e.name in ('prd','prd6') and st.name = 'Active';";
 
 
 		String returnValue = getRequestedInfo(customer, env, SQL, "replica_server");
@@ -1860,8 +1923,32 @@ public class EnvDashboardView extends View {
 			
 		}
 
+		//Identify Windows Server version
+		SQL = "use " + getopsdb() + ";\n" +
+		"select ltrim(rtrim(operating_system)) as 'operating_system' from dbo.[server] where name = '" + replicaServer + "';";
 
-		returnString = replicaServer;
+		returnValue = getRequestedInfo(customer, env, SQL, "operating_system");
+		if(returnValue.contains("failed"))
+		{
+			System.out.println(returnValue);
+			returnString = returnValue;
+			return returnString;
+		}
+		else
+		{
+			String[] arrOfStr3 = returnValue.split(" ");
+			//for (String a: arrOfStr3)
+			  //  System.out.println(a);
+
+			WindowsServerVersion = arrOfStr3[3];
+			//System.out.println(WindowsServerVersion);
+			
+		}
+		
+		
+		
+
+		returnString = replicaServer + "," + WindowsServerVersion;
 		
 		return returnString;
 	
@@ -1886,7 +1973,7 @@ public class EnvDashboardView extends View {
 		"select [web_version], [binderyfrontend_version]\n" +
 		"from (\n" +
 		"select d.version as 'web_version', d.client_revision as 'binderyfrontend_version',\n" +
-		"		RANK() OVER (PARTITION BY c.acronym, e.name, p.name, di.name, t.name ORDER BY d.start_timestamp DESC) AS Rank\n" +
+		"		RANK() OVER (PARTITION BY c.acronym, e.name, t.name ORDER BY d.start_timestamp DESC) AS Rank\n" +
 		"                                         from dbo.deployment d inner join dbo.status s on d.status_id = s.status_id \n" +
 		"                                                                     inner join dbo.client c on d.client_id = c.client_id\n" +
 		"                                                                     inner join dbo.provisioning_environment p on d.provisioning_environment_id = p.provisioning_environment_id\n" +
@@ -2077,6 +2164,7 @@ public class EnvDashboardView extends View {
 	   String activeServer = null;
 	   String currentInstanceType = null;
 	   String currentInstanceTypeFamily = null;
+	   String WindowsServerVersion = null;
 	   int numOfActiveEnvs = 0;
 	   boolean resizeServer = false;
 		
@@ -2110,6 +2198,9 @@ public class EnvDashboardView extends View {
 			
 			currentInstanceTypeFamily = arrOfStr[3].split("\\.")[0];
 			System.out.println(currentInstanceTypeFamily);
+			
+			WindowsServerVersion = arrOfStr[4];
+			System.out.println(WindowsServerVersion);
 			
 		}
 			
@@ -2253,6 +2344,7 @@ public class EnvDashboardView extends View {
 		   JsonObject joInstanceTypes = null;
 		   JsonObject joInfo = null;
 		   JsonObject joInfoStart = null;
+		   JsonObject joWindowsServerVersion = null;
 		   Date next_run_date_time_for_conv = null;
 		   String next_run_date_time = null;
 		   String next_run_time = null;
@@ -2267,6 +2359,19 @@ public class EnvDashboardView extends View {
 				retrievedJob = rs.getString("name");
 			}
 
+
+			//Get Windows OS version
+			System.out.println(getCurentDateTime() + ": Check Windows OS version...");
+			jarr.add(Json.createObjectBuilder()
+				  .add("windows_server_version", WindowsServerVersion)
+			  .build());
+			
+			arr = jarr.build();
+			joWindowsServerVersion = Json.createObjectBuilder().add("windowsserverversion", arr).build();
+			System.out.println(joWindowsServerVersion);
+				
+				
+
 			if (retrievedJob == null || retrievedJob.isEmpty())
 			{
 				System.out.println(getCurentDateTime() + ": " + job + " doesn't exist");
@@ -2279,8 +2384,23 @@ public class EnvDashboardView extends View {
 				arr = jarr.build();
 			    joInfo = Json.createObjectBuilder().add("info", arr).build();
 			    System.out.println(joInfo);
-			   
-			    returnString = joInfo.toString();
+				
+				
+				//Combine two json objects
+			   JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
+
+				for (String key : joWindowsServerVersion.keySet()) {
+					jsonObjectBuilder.add(key, joWindowsServerVersion.get(key));
+				}
+				for (String key : joInfo.keySet()) {
+					jsonObjectBuilder.add(key, joInfo.get(key));
+				}
+				 
+				JsonObject combinedStepsAndInfo = jsonObjectBuilder.build();
+				System.out.println(combinedStepsAndInfo);
+				
+				returnString = combinedStepsAndInfo.toString();
+					
 			}
 			else
 			{
@@ -2436,6 +2556,10 @@ public class EnvDashboardView extends View {
 					retrievedJob = rs.getString("name");
 			   }
 			   
+			   
+
+				
+			   
 			   if (retrievedJob == null || retrievedJob.isEmpty())
 			   {
 					System.out.println(getCurentDateTime() + ": " + job + " doesn't exist");
@@ -2573,6 +2697,7 @@ public class EnvDashboardView extends View {
 				joCurrentInstanceType = Json.createObjectBuilder().add("currentinstancetype", arr).build();
 				System.out.println(joCurrentInstanceType);
 				
+								
 				
 			   //Get available instance types
 				System.out.println(getCurentDateTime() + ": About to execute SQL query for retrieving instance types...");
@@ -2610,6 +2735,9 @@ public class EnvDashboardView extends View {
 				}
 			    for (String key : joInstanceTypes.keySet()) {
 					jsonObjectBuilder.add(key, joInstanceTypes.get(key));
+				}
+				for (String key : joWindowsServerVersion.keySet()) {
+					jsonObjectBuilder.add(key, joWindowsServerVersion.get(key));
 				}
 				 
 				JsonObject combinedStepsAndInfoAndInfoStart = jsonObjectBuilder.build();

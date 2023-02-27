@@ -703,6 +703,7 @@ function showClientSelection() {
 						var CRjobstepActionType;
 						var serverResizeQualified = false;
 						var currentInstanceType;
+						var WindowsServerVersion;
 						
 						//Create a proxy for EnvDashView Java object on a server side so it can later be used during AJAX calls
 						var EnvDashViewProxy;
@@ -987,18 +988,18 @@ function showClientSelection() {
 										if (Q("#build_num").val().length != 0 &amp;&amp; Q("#core_version").val().length == 0 &amp;&amp; typeofDeployment == "client")
 										{
 											//Perform client deployment
-											startDeployment("client",Q("#clientAcronym").val(),Q("#environment").val(),Q("#build_num").val(),"NA","NA","NA","NA");
+											startDeployment("client",Q("#clientAcronym").val(),Q("#environment").val(),Q("#build_num").val(),"NA","NA","NA","NA",WindowsServerVersion);
 										}
 										else if (Q("#core_version").val().length != 0 &amp;&amp; Q("#build_num").val().length == 0 &amp;&amp; typeofDeployment == "backend")
 										{
 											//Perform backend deployment
-											startDeployment("backend",Q("#clientAcronym").val(),Q("#environment").val(),Q("#core_version").val(),Q("#binderyFrontendVersion").val(),Q("#currentinstancetype").val(),Q("#futureinstancetype").val(),Q("#webfrontendVersion").val());
+											startDeployment("backend",Q("#clientAcronym").val(),Q("#environment").val(),Q("#core_version").val(),Q("#binderyFrontendVersion").val(),Q("#currentinstancetype").val(),Q("#futureinstancetype").val(),Q("#webfrontendVersion").val(),WindowsServerVersion);
 											
 										}
 										else if (typeofDeployment == "CRjob")
 										{
 											//Initiate CR job
-											startDeployment("CRjob",Q("#clientAcronym").val(),Q("#environment").val(),"NA","NA","NA","NA","NA");
+											startDeployment("CRjob",Q("#clientAcronym").val(),Q("#environment").val(),"NA","NA","NA","NA","NA",WindowsServerVersion);
 
 										}
 										else if (typeofDeployment == "web")
@@ -1663,6 +1664,17 @@ function showClientSelection() {
 							
 							
 							Q("#parse").click(function(){
+							
+								var serverInQuestion = null;
+								
+								if(Q("#activeServer").val())
+								{
+									serverInQuestion = Q("#activeServer").val();
+								}
+								else
+								{
+									serverInQuestion = Q("#replicaServer").val();
+								}
 								
 								//alert(Q("#SQLscript").val());
 								//alert(Q("#activeServer").val());
@@ -1674,7 +1686,7 @@ function showClientSelection() {
 									
 									//Connecting directly to SQL server by passing SQL query to parse
 									var response3 = "";
-									EnvDashViewProxy.parseSQLquery(Q("#SQLscript").val(),Q("#activeServer").val(),function(t) {
+									EnvDashViewProxy.parseSQLquery(Q("#SQLscript").val(),serverInQuestion,function(t) {
 										 response3 = t.responseObject();
 										 if (response3.indexOf("failed") == -1)
 										 {
@@ -1744,6 +1756,10 @@ function showClientSelection() {
 										 var stepsjobject = JSON.parse(response2);
 										 //alert(stepsjobject);
 										 
+										 
+										 WindowsServerVersion = stepsjobject.windowsserverversion[0].windows_server_version;
+										 //alert(WindowsServerVersion);
+
 										 
 										 //alert(response2);
 										 //alert("About to populate the table...");
@@ -1935,6 +1951,7 @@ function showClientSelection() {
 								else
 								{
 									Q("#kickoffDateTimeSection").hide();
+									Q("#datetimepicker").val("");
 								}
 								
 							});
@@ -3124,7 +3141,7 @@ function showClientSelection() {
 									 
 
 									 //Get information on replica server
-									 Q("#replicaServer").val(response12);									
+									 Q("#replicaServer").val(response12.split(",")[0]);
 									
 									Q("#loader2").hide();
 									Q("#dialog").show();
@@ -3205,6 +3222,8 @@ function showClientSelection() {
 									 //console.log(stepsjobject2);
 									 
 									 
+									 WindowsServerVersion = stepsjobject2.windowsserverversion[0].windows_server_version;
+									 //alert(WindowsServerVersion);
 									 
 									 //Get information on the nightly job
 									 
@@ -3338,6 +3357,7 @@ function showClientSelection() {
 										 }
 
 										
+
 										 
 										 //Get information on the nightly job start
 										 Q.each(stepsjobject2.infoStart, function(index, element){
@@ -3486,7 +3506,7 @@ function showClientSelection() {
 						}
 						
 						
-						function startDeployment(type, comp, env, version, binderyVersion, curInstanceType, futInstanceType, webVersion)
+						function startDeployment(type, comp, env, version, binderyVersion, curInstanceType, futInstanceType, webVersion, WindowsServerVersion)
 						{
 							var xmlHttp = new XMLHttpRequest();
 							var baseUrl;
@@ -3495,16 +3515,38 @@ function showClientSelection() {
 							
 							if (type == "client")
 							{
-								baseUrl = "/job/Client_Deploy";
+								
+								if (WindowsServerVersion == "2019")
+								{
+									baseUrl = "/job/Client_Deploy_2019";
+								}
+								else
+								{
+									baseUrl = "/job/Client_Deploy";
+								}
 								
 							}
 							else if (type == "backend")
 							{
-								baseUrl = "/job/Backend_Deploy";
+								if (WindowsServerVersion == "2019")
+								{
+									baseUrl = "/job/Backend_Deploy_2019";
+								}
+								else
+								{
+									baseUrl = "/job/Backend_Deploy";
+								}
 							}
 							else if (type == "CRjob")
 							{
-								baseUrl = "/job/CR_Job";
+								if (WindowsServerVersion == "2019")
+								{
+									baseUrl = "/job/CR_Job_2019";
+								}
+								else
+								{
+									baseUrl = "/job/CR_Job";
+								}
 							
 							}
 							else if (type == "web")
@@ -3694,9 +3736,13 @@ function showClientSelection() {
 							{
 								branch = "deploy-6.0";
 							}
-							else if (versionCompare(parsedShortWebVersion, "6.2.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.2.0", options) === 0)
+							else if (versionCompare(parsedShortWebVersion, "6.3", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "6.2.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.2.0", options) === 0))
 							{
 								branch = "deploy-6.2";
+							}
+							else if (versionCompare(parsedShortWebVersion, "6.3.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.3.0", options) === 0)
+							{
+								branch = "deploy-6.3";
 							}
 							else
 							{
