@@ -3549,11 +3549,7 @@ function showClientSelection() {
 								}
 							
 							}
-							else if (type == "web")
-							{
-								baseUrl = "/job/qdwWebDockerDeployClientEnvironment";
 							
-							}
 							
 							var buildUrl = "";							
 							var DoNotPerformRollback;
@@ -3563,6 +3559,8 @@ function showClientSelection() {
 							
 							var webDeploy = false;
 							var branch;
+							
+							var webJob;
 							//Prepare switches and parameters for passing to Jenkins
 							
 							
@@ -3574,6 +3572,15 @@ function showClientSelection() {
 								if(!branch)
 								{
 									return false;
+								}
+								
+								if (branch == "deploy-7.0")
+								{
+									baseUrl = "/job/qdwWebDockerDeployClientEnvironment_v7";
+								}
+								else
+								{
+									baseUrl = "/job/qdwWebDockerDeployClientEnvironment";
 								}
 								
 								
@@ -3657,10 +3664,21 @@ function showClientSelection() {
 												return false;
 											}
 											
+											if (branch == "deploy-7.0")
+											{
+												webJob = "qdwWebDockerDeployClientEnvironment_v7";
+											}
+											else
+											{
+												webJob = "qdwWebDockerDeployClientEnvironment";
+											}
+								
+											
 											buildUrl = buildUrl +
 												"&amp;gitBranch=" + branch +
 												"&amp;tag=" + webVersion +
-												"&amp;binderyTag=" + binderyVersion;
+												"&amp;binderyTag=" + binderyVersion +
+												"&amp;JenkinsWebJob=" + webJob;
 												
 										}
 										
@@ -3740,9 +3758,13 @@ function showClientSelection() {
 							{
 								branch = "deploy-6.2";
 							}
-							else if (versionCompare(parsedShortWebVersion, "6.3.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.3.0", options) === 0)
+							else if (versionCompare(parsedShortWebVersion, "7.0", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "6.3.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "6.3.0", options) === 0))
 							{
 								branch = "deploy-6.3";
+							}
+							else if (versionCompare(parsedShortWebVersion, "7.0.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "7.0.0", options) === 0)
+							{
+								branch = "deploy-7.0";
 							}
 							else
 							{
