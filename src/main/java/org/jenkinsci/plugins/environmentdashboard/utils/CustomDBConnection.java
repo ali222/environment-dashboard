@@ -9,6 +9,9 @@ import java.io.File;
 
 import java.text.SimpleDateFormat;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * Singleton class to represent a single DB connection. 
  * @author robertnorthard
@@ -27,8 +30,25 @@ public class CustomDBConnection {
 		System.out.println(timeStamp + ": At getConnection function");
 		String dbConnectionString = null;
 		
+		String hostname = "Unknown";
+
+		try
+		{
+			InetAddress addr;
+			addr = InetAddress.getLocalHost();
+			hostname = addr.getHostName();
+			
+			//System.out.println(addr);
+			System.out.println("hostname is " + hostname);
+		}
+		catch (UnknownHostException ex)
+		{
+			System.out.println("Hostname can not be resolved");
+		}
+
+		
 		// Generate connection String for DB driver
-		if (SQLauthentication)
+		if ((SQLauthentication && server.contains("opssqlprd01")) || (SQLauthentication && hostname.contains("ip-"))) //check if Jenkins DEV or PROD is used by checking hostname
 		{
 			//Use this string for manual testing on your local computer
 			//dbConnectionString = "jdbc:sqlserver://" + server + ":" + port + ";databaseName=" + db + ";user=" + userName + ";password=" + userPassword;
