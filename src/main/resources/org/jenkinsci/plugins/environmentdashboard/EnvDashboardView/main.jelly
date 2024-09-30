@@ -238,17 +238,17 @@ function showClientSelection() {
 
 						<j:forEach items="${orderOfEnvs}" var="envsHeader">
 							<th style="text-align:center">
-								<a style="text-decoration:none" title="View environment history" id="${envsHeader}_Header" href="javascript:toggle('${envsHeader}_History');">${envsHeader}</a>
-								<div id="${envsHeader}_History" style="display: inline-block; position: fixed; top: 100; bottom: 100; left: 0; right: 0; width: 900px; height: 600px; position:fixed; margin: auto; padding: 10px; background-color: #FEFEFE; border: 1px solid; border-color: #DDDDDD; box-shadow: 1px 2px 1px #AAAAAA; border-radius: 15px; display:none; overflow: auto; overflow-x:hidden;">
+								<a style="text-decoration: none; font-size: medium;" title="View environment history" id="${envsHeader}_Header" href="javascript:toggle('${envsHeader}_History');">${envsHeader}</a>
+								<div id="${envsHeader}_History" style="display: inline-block; font-size: medium; position: fixed; top: 100; bottom: 100; left: 0; right: 0; width: 900px; height: 600px; position:fixed; margin: auto; padding: 10px; background-color: #FEFEFE; border: 1px solid; border-color: #DDDDDD; box-shadow: 1px 2px 1px #AAAAAA; border-radius: 15px; display:none; overflow: auto; overflow-x:hidden;">
 									<div align="right">
 										<b onclick="javascript:hideAll()" style="cursor: pointer">[X]</b>
 									</div>
-									<h3>${envsHeader}</h3>
+									<h3 style="font-size: x-large;">${envsHeader}</h3>
 									 <table class="table table-bordered table-striped table-condensed">
 										<j:set var="limitDeploy" value="${it.getLimitDeployHistory()}"/>
 										<tbody>
-											<th style="text-align:center">Component</th>
-											<th style="text-align:center">Build</th>
+											<th style="text-align:center; font-size: medium;">Component</th>
+											<th style="text-align:center; font-size: medium;">Build</th>
 
 											<j:set var="hasPackageColumn" value="${false}"/>
 											<j:forEach items="${it.getDeployments(envsHeader, limitDeploy)}" var="time">
@@ -257,9 +257,9 @@ function showClientSelection() {
 												</j:if>
 											</j:forEach>
 											<j:if test="${hasPackageColumn}">
-												<th style="text-align:center">Package</th>
+												<th style="text-align:center; font-size; 20px;">Package</th>
 											</j:if> 
-											<th style="text-align:center">Last Update</th>
+											<th style="text-align:center; font-size: medium;">Last Update</th>
 										</tbody>
 										<j:forEach items="${it.getDeployments(envsHeader, limitDeploy)}" var="time">
 										<j:set var="deployment" value="${it.getCompDeployed(envsHeader,time)}"/>
@@ -288,7 +288,7 @@ function showClientSelection() {
 													</td>
 												</j:if>
 												<td>
-													<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments">${it.getNiceTimeStamp(time)}</a>
+													<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments" style="font-size: medium;">${it.getNiceTimeStamp(time)}</a>
 												</td>
 											</tr>
 										</j:forEach>
@@ -302,30 +302,30 @@ function showClientSelection() {
 										<div align="right">
 											<b onclick="javascript:hideAll()" style="cursor: pointer">[X]</b>
 										</div>
-										<h3>${comp + "   |   " + envsHeader}</h3>
+										<h3 style="font-size: x-large;">${comp + "   |   " + envsHeader}</h3>
 										 <table style="width=100%" class="table table-bordered table-striped table-condensed">
 											<tbody>
-												<th style="width: 8%;text-align:center">Build</th>
+												<th style="width: 8%;text-align:center; font-size: medium;">Build</th>
 												<j:if test="${compLastDeployed.get('packageName') != null &amp;&amp; !compLastDeployed.get('packageName').equals('')}">
-													<th style="text-align:center">Package</th>
+													<th style="text-align:center; font-size: medium;">Package</th>
 												</j:if>
 												<j:forEach items="${customColumnsList}" var="column">
 													<j:if test="${compLastDeployed.get(column.toLowerCase()) != null}">
-														<th style="text-align:center">${column.substring(0, 1).toUpperCase() + column.substring(1)}</th>
+														<th style="text-align:center; font-size: medium;">${column.substring(0, 1).toUpperCase() + column.substring(1)}</th>
 													</j:if>
 												</j:forEach>
 												
 												<j:if test="${comp.indexOf('CRjob') == -1}"> 
-													<th style="width:8%;text-align:center">Action</th>
+													<th style="width:8%;text-align:center; font-size: medium;">Action</th>
 												</j:if>
-												<th style="width:8%;text-align:center">Status</th>
-												<th style="text-align:center">Time</th>
+												<th style="width:8%;text-align:center; font-size: medium;">Status</th>
+												<th style="text-align:center; font-size: medium;">Time</th>
 											</tbody>
 											
 											<j:forEach items="${it.getDeploymentsByCompEnv(comp, envsHeader, limitDeploy)}" var="deployment">
 													<tr>
-														<td >
-															<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments">${deployment.get('buildNum')}</a>
+														<td>
+															<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments" style="font-size: medium;">${deployment.get('buildNum')}</a>
 														</td>
 														<j:if test="${compLastDeployed.get('packageName') != null &amp;&amp; !compLastDeployed.get('packageName').equals('')}">
 															<td style="word-wrap:break-word">
@@ -350,21 +350,21 @@ function showClientSelection() {
 																			<j:case value="SUCCESS">
 																				<j:choose>
 																					<j:when test="${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)] == 'Last Commit'}">
-																						<a title="Promote" href="javascript:showClientDepDynamicDialog('${comp}',null,'${deployment.get('buildNum')}');">Promote</a>
+																						<a title="Promote" href="javascript:showClientDepDynamicDialog('${comp}',null,'${deployment.get('buildNum')}');" style="font-size: medium;">Promote</a>
 																					</j:when>
 																					<j:otherwise>
-																						<a title="Promote" href="javascript:showClientDepDynamicDialog('${comp}','${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1]}','${deployment.get('buildNum')}');">Promote</a>
+																						<a title="Promote" href="javascript:showClientDepDynamicDialog('${comp}','${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1]}','${deployment.get('buildNum')}');" style="font-size: medium;">Promote</a>
 																					</j:otherwise>
 																				</j:choose>
 																			</j:case>
 																			<j:case value="FAILURE">
-																				 <a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																				 <a title="Promote" href="javascript:void(0)" class="disabled" style="font-size: medium;">Promote</a>
 																			</j:case>
 																			<j:case value="RUNNING">
-																				 <a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																				 <a title="Promote" href="javascript:void(0)" class="disabled" style="font-size: medium;">Promote</a>
 																			</j:case>
 																			<j:default>																	
-																				  <a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																				  <a title="Promote" href="javascript:void(0)" class="disabled" style="font-size: medium;">Promote</a>
 																			</j:default>
 																		</j:switch>
 																	</j:if>	
@@ -372,10 +372,10 @@ function showClientSelection() {
 																	
 																			<j:switch on="${deployment.get('buildstatus')}">
 																			<j:case value="SUCCESS">
-																				 <a title="Promote" href="javascript:showBackendDepDynamicDialog('${comp}','${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1]}','${deployment.get('buildNum')}');">Promote</a>
+																				 <a title="Promote" href="javascript:showBackendDepDynamicDialog('${comp}','${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1]}','${deployment.get('buildNum')}');" style="font-size: medium;">Promote</a>
 																			</j:case>
 																			<j:default>																
-																				  <a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																				  <a title="Promote" href="javascript:void(0)" class="disabled" style="font-size: medium;">Promote</a>
 																			</j:default>
 																		</j:switch>
 																		
@@ -384,10 +384,10 @@ function showClientSelection() {
 																	
 																			<j:switch on="${deployment.get('buildstatus')}">
 																			<j:case value="SUCCESS">
-																				 <a title="Promote" href="javascript:showWebDepDynamicDialog('${comp}','${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1]}','${deployment.get('buildNum')}');">Promote</a>
+																				 <a title="Promote" href="javascript:showWebDepDynamicDialog('${comp}','${orderOfEnvs[orderOfEnvs.indexOf(envsHeader)+1]}','${deployment.get('buildNum')}');" style="font-size: medium;">Promote</a>
 																			</j:case>
 																			<j:default>																
-																				  <a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																				  <a title="Promote" href="javascript:void(0)" class="disabled" style="font-size: medium;">Promote</a>
 																			</j:default>
 																		</j:switch>
 																		
@@ -402,21 +402,21 @@ function showClientSelection() {
 														<td>
 															<j:switch on="${deployment.get('buildstatus')}">
 																<j:case value="SUCCESS">
-																	<span title="SUCCESS" style="color:green;">&#10004;</span>
+																	<span title="SUCCESS" style="color:green; font-size: medium;">&#10004;</span>
 																</j:case>
 																<j:case value="FAILURE">
-																	<span title="FAILURE" style="color:darkred;">&#x2716;</span>
+																	<span title="FAILURE" style="color:darkred; font-size: medium;">&#x2716;</span>
 																</j:case>
 																<j:case value="RUNNING">
-																	<span title="RUNNING" style="color:blue;">&#9658;</span>
+																	<span title="RUNNING" style="color:blue; font-size: medium;">&#9658;</span>
 																</j:case>
 																<j:default>
-																	<span title="UNKNOWN" style="color:orange;">&#63;</span>
+																	<span title="UNKNOWN" style="color:orange; font-size: medium;">&#63;</span>
 																</j:default>
 															</j:switch>
 														</td>
 														<td>
-															<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments">${it.getNiceTimeStamp(deployment.get('created_at'))}</a>
+															<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments" style="font-size: medium;">${it.getNiceTimeStamp(deployment.get('created_at'))}</a>
 														</td>
 													</tr>
 											</j:forEach>	  
@@ -432,7 +432,7 @@ function showClientSelection() {
 										<div align="right">
 											<b onclick="javascript:hideAll()" style="cursor: pointer">[X]</b>
 										</div>
-										<h3>${comp} History</h3>
+										<h3 style="font-size: x-large;">${comp} History</h3>
 										 <table class="table table-bordered table-striped table-condensed">
 											<tbody>
 												<th style="text-align:center">Env</th>
@@ -489,7 +489,7 @@ function showClientSelection() {
 					<!-- Main dashboard -->
 					<j:forEach items="${orderOfComps}" var="comps">
 						<tr>
-							<td align="center"><strong><a href="javascript:toggle('${comps}_History')">${comps}</a></strong></td>
+							<td align="center"><strong><a href="javascript:toggle('${comps}_History')" style="font-size: medium;">${comps}</a></strong></td>
 							<j:forEach items="${orderOfEnvs}" var="env">
 							
 								<j:set var="deployment" value="${it.getCompLastDeployed(env, comps)}"/>
@@ -563,10 +563,10 @@ function showClientSelection() {
 															<j:if test="${comps.indexOf('Backend') == -1 &amp;&amp; comps.indexOf('CRjob') == -1 &amp;&amp; comps.indexOf('Web') == -1}">
 															<j:switch on="${deployment.get('buildstatus')}">
 																<j:case value="SUCCESS">
-																	 <a title="Promote" href="javascript:showClientDepDynamicDialog('${comps}','${orderOfEnvs[orderOfEnvs.indexOf(env)+1]}','${deployment.get('buildNum')}');">Promote${it.envVars}</a>
+																	 <a title="Promote" style="font-size: medium;" href="javascript:showClientDepDynamicDialog('${comps}','${orderOfEnvs[orderOfEnvs.indexOf(env)+1]}','${deployment.get('buildNum')}');">Promote${it.envVars}</a>
 																</j:case>
 																<j:default>																	
-																	  <a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																	  <a title="Promote" style="font-size: medium;" href="javascript:void(0)" class="disabled">Promote</a>
 																</j:default>
 															 </j:switch>
 																
@@ -576,10 +576,10 @@ function showClientSelection() {
 												
 																<j:switch on="${deployment.get('buildstatus')}">
 																	<j:case value="SUCCESS">
-																		<a title="Promote" href="javascript:showBackendDepDynamicDialog('${comps}','${orderOfEnvs[orderOfEnvs.indexOf(env)+1]}','${deployment.get('buildNum')}');">Promote</a>
+																		<a title="Promote" style="font-size: medium;" href="javascript:showBackendDepDynamicDialog('${comps}','${orderOfEnvs[orderOfEnvs.indexOf(env)+1]}','${deployment.get('buildNum')}');">Promote</a>
 																	</j:case>
 																	<j:default>																	
-																		<a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																		<a title="Promote" style="font-size: medium;" href="javascript:void(0)" class="disabled">Promote</a>
 																	</j:default>
 																</j:switch>
 
@@ -590,10 +590,10 @@ function showClientSelection() {
 												
 																<j:switch on="${deployment.get('buildstatus')}">
 																	<j:case value="SUCCESS">
-																		<a title="Promote" href="javascript:showWebDepDynamicDialog('${comps}','${orderOfEnvs[orderOfEnvs.indexOf(env)+1]}','${deployment.get('buildNum')}');">Promote</a>
+																		<a title="Promote" style="font-size: medium;" href="javascript:showWebDepDynamicDialog('${comps}','${orderOfEnvs[orderOfEnvs.indexOf(env)+1]}','${deployment.get('buildNum')}');">Promote</a>
 																	</j:case>
 																	<j:default>																	
-																		<a title="Promote" href="javascript:void(0)" class="disabled">Promote</a>
+																		<a title="Promote" style="font-size: medium;" href="javascript:void(0)" class="disabled">Promote</a>
 																	</j:default>
 																</j:switch>
 
@@ -625,8 +625,8 @@ function showClientSelection() {
 													 
 															
 														<div class="dropdown" style="float:right;">
-																<button class="dropbtn" >Deploy to ${env_promote}...</button>
-														  <div id="myDropdown${env_promote}" class="dropdown-content">
+																<button class="dropbtn" style="font-size: medium;">Deploy to ${env_promote}...</button>
+														  <div id="myDropdown${env_promote}" class="dropdown-content" style="font-size: medium;">
 															<code>
 																<j:forEach items="${tags}" var="tag">
 																	<j:if test="${env_promote == 'DEV'}">
@@ -645,7 +645,7 @@ function showClientSelection() {
 													
 													<!-- PROMOTE LINKS under 'Last Commit' column -->
 													<j:if test="${comps.indexOf('Backend') == -1 &amp;&amp; comps.indexOf('CRjob') == -1 &amp;&amp; comps.indexOf('Web') == -1 &amp;&amp; env_promote.indexOf('RPL') == -1}"> 
-														<div style="margin-right:30px; float:right;">
+														<div style="margin-right:30px; float:right; font-size: medium;">
 															<j:switch on="${deployment.get('buildstatus')}">
 																<j:case value="SUCCESS">
 																	  <a href="javascript:javascript:showClientDepDynamicDialog('${comps}','${env_promote}','${deployment.get('buildNum')}');">Promote to ${env_promote}</a>
@@ -661,7 +661,7 @@ function showClientSelection() {
 													
 													<!-- CRjob LINKS under 'Last Commit' column -->
 													<j:if test="${comps.indexOf('CRjob') != -1}"> 
-														<div style="margin-right:30px; float:right;">
+														<div style="margin-right:30px; float:right; font-size: medium;">
 															<a href="javascript:javascript:showCRjobDynamicDialog('${comps}','${env_promote}');">Initiate at ${env_promote}</a>
 														</div>								
 													</j:if>
@@ -671,8 +671,8 @@ function showClientSelection() {
 													<j:set var="webtags" value="${it.getOrderOfWebOrBinderyFrontTags('web', false)}"/>
 															
 														<div class="dropdown" style="float:right;">
-																<button class="dropbtn2" >Deploy to ${env_promote}...</button>
-														  <div id="myDropdown${env_promote}" class="dropdown-content">
+																<button class="dropbtn2" style="font-size: medium;">Deploy to ${env_promote}...</button>
+														  <div id="myDropdown${env_promote}" class="dropdown-content" style="font-size: medium;">
 															<code>
 																<j:forEach items="${webtags}" var="webtag">
 																	<a href="javascript:showWebDepDynamicDialog('${comps}','${env_promote}', '${webtag}');">${webtag}</a>
@@ -1421,27 +1421,27 @@ function showClientSelection() {
 													
 													
 													Q("#actualCRjobstepsTable").append('<tr id="' + next_step_id + '">' +
-														 '<td id="step_id" style="width: 8%;text-align:center">' + next_step_id + '</td>' +
-														 '<td id="step_name" style="width: 8%;text-align:center">' + Q("#stepname").val().trim() + '</td>' +
+														 '<td id="step_id" style="width: 8%;text-align:center; font-size: small;">' + next_step_id + '</td>' +
+														 '<td id="step_name" style="width: 8%;text-align:center; font-size: small;">' + Q("#stepname").val().trim() + '</td>' +
 														 
 														 //'<td id="subsystem" style="width: 8%;text-align:center">' + "TSQL" + '</td>' +
-														 '<td id="subsystem" style="width: 8%;text-align:center">' + Q("#commandTypeDecision").val() + '</td>' +
+														 '<td id="subsystem" style="width: 8%;text-align:center; font-size: small;">' + Q("#commandTypeDecision").val() + '</td>' +
 														 
 														 
-														 '<td id="command_substring" style="width: 8%;text-align:center">' + Q("#SQLscript").val().substring(0, 14) + '...</td>' +
+														 '<td id="command_substring" style="width: 8%;text-align:center; font-size: small;">' + Q("#SQLscript").val().substring(0, 14) + '...</td>' +
 														 //'<td style="width: 8%;text-align:center;visibility:hidden"><textarea class="' + next_step_id + '_for_command_retrieval">' + element.command + '</textarea></td>' +	 
 														
 														
 														//'<td id="on_success_action" style="width: 8%;text-align:center">' + "quit with success" + '</td>' +
 														//'<td id="on_fail_action" style="width: 8%;text-align:center">' + "quit with failure" + '</td>' +
 														
-														'<td id="on_success_action" style="width: 8%;text-align:center">' + Q("#on_success_actionDecision").val() + '</td>' +
-														'<td id="on_fail_action" style="width: 8%;text-align:center">' + Q("#on_fail_actionDecision").val() + '</td>' +
+														'<td id="on_success_action" style="width: 8%;text-align:center; font-size: small;">' + Q("#on_success_actionDecision").val() + '</td>' +
+														'<td id="on_fail_action" style="width: 8%;text-align:center; font-size: small;">' + Q("#on_fail_actionDecision").val() + '</td>' +
 														
 														//'<td id="on_success_action" style="width: 8%;text-align:center">' + Q("#on_success_actionDecision").find(":selected").text() + '</td>' +
 														//'<td id="on_fail_action" style="width: 8%;text-align:center">' + Q("#on_fail_actionDecision").find(":selected").text() + '</td>' +
 														
-														 '<td id="radioButton" style="width: 8%;text-align:center"><input type="radio" name="CRjobsteps" value="' + next_step_id + '"></input></td>' +
+														 '<td id="radioButton" style="width: 8%;text-align:center; font-size: small;"><input type="radio" name="CRjobsteps" value="' + next_step_id + '"></input></td>' +
 														 
 														 //'<td>EditButton</td>' +
 														 //'<td style="width: 8%;text-align:center"><input type="button" id="edit" value="edit"></input></td>' +
@@ -1800,13 +1800,13 @@ function showClientSelection() {
 												{
 													 CRjobIdleStatus = true;
 													 Q("#actualCRjobinfoTable").append('<tr>' +
-																						 '<td style="width: 8%;text-align:center">' + element.start_step_id + '</td>' +
-																						 '<td style="width: 8%;text-align:center">' + element.date_modified + '</td>' +
-																						 '<td style="width: 8%;text-align:center">' + element.last_run_date + '</td>' +
-																						 '<td style="width: 8%;text-align:center">' + element.last_run_time + '</td>' +
-																						 '<td style="width: 8%;text-align:center">' + element.last_run_outcome + '</td>' +
-																						 '<td style="width: 8%;text-align:center">' + element.current_execution_status + '</td>' +
-																						 '<td style="width: 8%;text-align:center">' + element.current_execution_step + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.start_step_id + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.date_modified + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.last_run_date + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.last_run_time + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.last_run_outcome + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.current_execution_status + '</td>' +
+																						 '<td style="width: 8%;text-align:center; font-size: small;">' + element.current_execution_step + '</td>' +
 																					   '</tr>');
 													 
 													 //Q("#activeDB").val(element.activeDB);
@@ -1852,13 +1852,13 @@ function showClientSelection() {
 												//alert(element.on_fail_action); 
 												
 												 Q("#actualCRjobstepsTable").append('<tr id="' + element.step_id + '">' +
-																						 '<td id="step_id" style="width: 8%;text-align:center">' + element.step_id + '</td>' +
-																						 '<td id="step_name" style="width: 8%;text-align:center">' + element.step_name + '</td>' +
-																						 '<td id="subsystem" style="width: 8%;text-align:center">' + element.subsystem + '</td>' +
-																						 '<td id="command_substring" style="width: 8%;text-align:center">' + element.command.substring(0, 14) + '...</td>' +
+																						 '<td id="step_id" style="width: 8%;text-align:center; font-size: small;">' + element.step_id + '</td>' +
+																						 '<td id="step_name" style="width: 8%;text-align:center; font-size: small;">' + element.step_name + '</td>' +
+																						 '<td id="subsystem" style="width: 8%;text-align:center; font-size: small;">' + element.subsystem + '</td>' +
+																						 '<td id="command_substring" style="width: 8%;text-align:center; font-size: small;">' + element.command.substring(0, 14) + '...</td>' +
 																						 //'<td style="width: 8%;text-align:center;visibility:hidden"><textarea class="' + element.step_id + '_for_command_retrieval">' + element.command + '</textarea></td>' +	 
-																						 '<td id="on_success_action" style="width: 8%;text-align:center">' + element.on_success_action + '</td>' +
-																						 '<td id="on_fail_action" style="width: 8%;text-align:center">' + element.on_fail_action + '</td>' +
+																						 '<td id="on_success_action" style="width: 8%;text-align:center; font-size: small;">' + element.on_success_action + '</td>' +
+																						 '<td id="on_fail_action" style="width: 8%;text-align:center; font-size: small;">' + element.on_fail_action + '</td>' +
 																						 '<td id="radioButton" style="width: 8%;text-align:center"><input type="radio" name="CRjobsteps" value="' + element.step_id + '"></input></td>' +
 																						 
 																						 //'<td>EditButton</td>' +
@@ -3954,37 +3954,37 @@ function showClientSelection() {
 				<span id="customErrorPlacement" style="color:red; font-weight:bold"></span><br></br>
 				<table style="width=100%;" class="table table-bordered table-striped table-condensed hoverable-table-in-dialog">
 					<tbody>
-						<th style="width: 8%;text-align:center">Build</th>
-						<th style="width: 8%;text-align:center">SHA</th>
-						<th style="text-align:center">Time</th>
-						<th style="width:8%;text-align:center">Status</th>
+						<th style="width: 8%;text-align:center; font-size: small;">Build</th>
+						<th style="width: 8%;text-align:center; font-size: small;">SHA</th>
+						<th style="text-align:center; font-size: small;">Time</th>
+						<th style="width:8%;text-align:center; font-size: small;">Status</th>
 					</tbody>
 					<j:forEach items="${it.getDeploymentsByCompEnv(comp, 'Last Commit', limitDeploy)}" var="deployment">
 					<tr>
 						<td>
-							<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments">${deployment.get('buildNum')}</a>
+							<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments" style="font-size: small;">${deployment.get('buildNum')}</a>
 						</td>
 						<td>
-							<span class="${deployment.get('buildNum')}_sha_forReplacement">TBD</span>
+							<span class="${deployment.get('buildNum')}_sha_forReplacement" style="font-size: small;">TBD</span>
 						</td>
 						<td>
-							<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments">${it.getNiceTimeStamp(deployment.get('created_at'))}</a>
+							<a title="View Deployment" href="${deployment.get('jobUrl')}" target="AnalyticsBuildsDeployments" style="font-size: small;">${it.getNiceTimeStamp(deployment.get('created_at'))}</a>
 						</td>
 						<td>
 							<j:switch on="${deployment.get('buildstatus')}">
 								<j:case value="SUCCESS">
 									<!--<span title="SUCCESS" style="color:green;">&#10004;</span>-->
 									<input type="radio" name="clientBuilds" id="${deployment.get('buildNum')}" value="${deployment.get('jobUrl')}"></input>
-									<label title="SUCCESS" style="color:green;" for="${deployment.get('buildNum')}">       &#10004;</label>
+									<label title="SUCCESS" style="color:green; font-size: small;" for="${deployment.get('buildNum')}">       &#10004;</label>
 								</j:case>
 								<j:case value="FAILURE">
-									<span title="FAILURE" style="color:darkred;">&#x2716;</span>
+									<span title="FAILURE" style="color:darkred; font-size: small;">&#x2716;</span>
 								</j:case>
 								<j:case value="RUNNING">
-									<span title="RUNNING" style="color:blue;">&#9658;</span>
+									<span title="RUNNING" style="color:blue; font-size: small;">&#9658;</span>
 								</j:case>
 								<j:default>
-									<span title="UNKNOWN" style="color:orange;">&#63;</span>
+									<span title="UNKNOWN" style="color:orange; font-size: small;">&#63;</span>
 								</j:default>
 							</j:switch>
 						</td>
@@ -4072,7 +4072,7 @@ function showClientSelection() {
 		</div>
 		
 		<div id="prd-env-cr-job" style="text-align: left">
-			<label id="CRjobPrompt">  Please provide details for </label><label id="cr-job-dep">Placeholder for CR Job Dep Name</label><label id="CRjobPrompt2"> by clicking Properties button</label><div class="divider"/><input type="button" id="properties" value="Properties"></input>
+			<label id="CRjobPrompt">  Please provide details for </label><label id="cr-job-dep">Placeholder for CR Job Dep Name</label><label id="CRjobPrompt2"> by clicking Properties button</label><div class="divider"/><input type="button" id="properties" value="Properties" style="font-size: medium;"></input>
 			<br></br><br></br>	
 		</div>
 		
@@ -4103,7 +4103,7 @@ function showClientSelection() {
 
 		<div id="kickoffDateTimeSection">
 		<label id="datetimepickerLabel">Placeholder for type of request</label><div class="divider"/><input id="datetimepicker" name="datetimepicker" type="text"/><br></br>
-		<label id="datetimepickerDescriptionLabel">Uses America/New_York time zone</label>
+		<label id="datetimepickerDescriptionLabel" style="font-size: small;">Uses America/New_York time zone</label>
 		</div>
 		
 	</div>
@@ -4174,16 +4174,16 @@ function showClientSelection() {
 		<!--<span id="customErrorPlacement2" style="color:red; font-weight:bold"></span><br></br>-->
 
 		<div id="CRjobinfoTable" style="display: none; height:130px; overflow: auto;">
-			<label id="CRjobstatusInfo">CR job status info</label>
+			<label id="CRjobstatusInfo" style="font-size: medium;">CR job status info</label>
 			<table id="actualCRjobinfoTable" style="width=100%;" class="table table-bordered table-striped table-condensed">
 				<tbody>
-					<th style="width: 8%;text-align:center">start_step_id</th>
-					<th style="width: 8%;text-align:center">date_modified</th>
-					<th style="width: 8%;text-align:center">last_run_date</th>
-					<th style="width: 8%;text-align:center">last_run_time</th>
-					<th style="width: 8%;text-align:center">last_run_outcome</th>
-					<th style="width: 8%;text-align:center">current_execution_status</th>
-					<th style="width: 8%;text-align:center">current_execution_step</th>
+					<th style="width: 8%;text-align:center; font-size: small;">start_step_id</th>
+					<th style="width: 8%;text-align:center; font-size: small;">date_modified</th>
+					<th style="width: 8%;text-align:center; font-size: small;">last_run_date</th>
+					<th style="width: 8%;text-align:center; font-size: small;">last_run_time</th>
+					<th style="width: 8%;text-align:center; font-size: small;">last_run_outcome</th>
+					<th style="width: 8%;text-align:center; font-size: small;">current_execution_status</th>
+					<th style="width: 8%;text-align:center; font-size: small;">current_execution_step</th>
 					
 				</tbody>
 			</table>
@@ -4192,16 +4192,16 @@ function showClientSelection() {
 		<br></br>
 		
 		<div id="CRjobstepsTable" style="display: none; height:150px; overflow: auto;">
-			<label id="CRjobstepsInfo">CR job steps</label>
+			<label id="CRjobstepsInfo" style="font-size: medium;">CR job steps</label>
 			<table id="actualCRjobstepsTable" style="width=100%;" class="table table-bordered table-striped table-condensed hoverable-table-in-dialog">
 				<tbody>
-					<th style="width: 8%;text-align:center">step_id</th>
-					<th style="width: 8%;text-align:center">step_name</th>
-					<th style="width: 8%;text-align:center">subsystem</th>
-					<th style="width: 8%;text-align:center">command</th>
-					<th style="width: 8%;text-align:center">on_success_action</th>
-					<th style="width: 8%;text-align:center">on_fail_action</th>
-					<th style="width: 8%;text-align:center">choose</th>
+					<th style="width: 8%;text-align:center; font-size: small;">step_id</th>
+					<th style="width: 8%;text-align:center; font-size: small;">step_name</th>
+					<th style="width: 8%;text-align:center; font-size: small;">subsystem</th>
+					<th style="width: 8%;text-align:center; font-size: small;">command</th>
+					<th style="width: 8%;text-align:center; font-size: small;">on_success_action</th>
+					<th style="width: 8%;text-align:center; font-size: small;">on_fail_action</th>
+					<th style="width: 8%;text-align:center; font-size: small;">choose</th>
 				</tbody>
 			</table>
 		</div>
@@ -4211,11 +4211,11 @@ function showClientSelection() {
 	<br></br>
 	
 	<div id="buttons2" style="text-align: left">
-		<label id="CRjobstepActions">CR job step actions</label>
+		<label id="CRjobstepActions" style="font-size: medium;">CR job step actions</label>
 		<br></br>
-		<input type="button" id="new" value="New"></input><div class="divider"/>
-        <input type="button" id="edit" value="Edit"></input><div class="divider"/>
-		<input type="button" id="delete" value="Delete"></input><div class="divider"/>
+		<input type="button" id="new" value="New" style="font-size: medium;"></input><div class="divider"/>
+        <input type="button" id="edit" value="Edit" style="font-size: medium;"></input><div class="divider"/>
+		<input type="button" id="delete" value="Delete" style="font-size: medium;"></input><div class="divider"/>
 	</div>
 	<br></br>
 	
@@ -4225,11 +4225,11 @@ function showClientSelection() {
 	<input type="hidden" id="replicaServer" value=""/>
 	
 </form>
-<div id="dialog3" title="Title place holder" style="display:none;">
-  <p id="dialog3text">Place holder for message</p>
+<div id="dialog3" title="Title place holder" style="display:none; font-size: large;">
+  <p id="dialog3text" style="font-size: medium;">Place holder for message</p>
 </div>
 <form id="dialog4" title="cr-job-step-title" style="display:none;" autocomplete="off">
-	<div id="stepnameDefinition" style="text-align: left">
+	<div id="stepnameDefinition" style="text-align: left; font-size: medium;">
 		<label id="stepnameLabel">Step name:</label><div class="divider"/><input id="stepname" name="stepname" type="text" size="25" placeholder="Jira Ticket and step number"/><br></br>
 		<br></br>
 		
@@ -4246,7 +4246,7 @@ function showClientSelection() {
 		<div id="commmandLabelAndParseSection">
 			<label id="commandLabel">Command:</label>
 			<br></br><br></br>
-			<input type="button" id="parse" value="Parse" style="width:80px"></input>
+			<input type="button" id="parse" value="Parse" style="width:80px;"></input>
 		</div>
 		
 		<div id="textAreaSection">
@@ -4257,7 +4257,7 @@ function showClientSelection() {
 		
 		<br></br><br></br>
 		
-		<div id="on_success_actionAndon_fail_action" style="text-align: left">
+		<div id="on_success_actionAndon_fail_action" style="text-align: left;">
 			<label id="on_success_actionLabel">On success action:</label><div class="divider"/>
 			<select id="on_success_actionDecision" name="on_success_actionDecision">
 				<option value="">Choose...</option>
@@ -4279,7 +4279,7 @@ function showClientSelection() {
 	
 	<!-- dropdown menu for clients-->
 	<j:set var="clients" value="${it.getClients()}"/>
-	<div id="existing-clients" style="text-align: left">
+	<div id="existing-clients" style="text-align: left; font-size: medium;">
 		<div class="divider"/><div class="divider"/>
 		<label id="clientRequest">Please select a client to deploy to</label><div class="divider"/>
 		<select id="clientDecision" name="clientDecision">
