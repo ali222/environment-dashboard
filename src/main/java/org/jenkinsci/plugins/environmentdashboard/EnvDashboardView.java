@@ -798,11 +798,11 @@ public class EnvDashboardView extends View {
     }
 
     public String getEnvOrder() {
-        return envOrder;
+        return Util.escape(envOrder);
     }
 
     public void setEnvOrder(final String envOrder) {
-        this.envOrder = envOrder;
+        this.envOrder = Util.escape(envOrder);
     }
 
     public String getCompOrder() {
