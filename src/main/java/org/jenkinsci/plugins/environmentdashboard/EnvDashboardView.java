@@ -69,6 +69,15 @@ import javax.naming.directory.SearchResult;
 import jenkins.model.ModelObjectWithContextMenu.ContextMenu;
 
 
+//Needed for AWS
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+
+
 
 /**
  * Class to provide build wrapper for Dashboard.
@@ -1955,6 +1964,70 @@ public class EnvDashboardView extends View {
 	}
 
 
+
+	@JavaScriptMethod
+	public String checkForS3bucket(String customer, String env) 
+	{
+		
+		String returnString = "failed";
+		String bucketName = "qdw-web-" + customer + "-" + env.toLowerCase();
+        Region region = Region.US_EAST_1; // Set the correct AWS region
+
+		System.out.println(getCurentDateTime() + ": At checkForS3bucket function");
+		
+		System.out.println(getCurentDateTime() + ": Checking if AWS S3 " + bucketName + " bucket is empty if one exists...");
+			
+
+        try (S3Client s3Client = S3Client.builder()
+                .region(region)
+                .build()) {
+
+            boolean exists = doesBucketExist(s3Client, bucketName);
+            if (!exists) {
+                System.out.println("❌ Bucket '" + bucketName + "' does NOT exist.");
+				returnString = "notexists";
+            } else {
+                boolean isEmpty = isBucketEmpty(s3Client, bucketName);
+                if (isEmpty) {
+                    System.out.println("✅ Bucket '" + bucketName + "' is empty.");
+					returnString = "empty";
+                } else {
+                    System.out.println("⚠️ Bucket '" + bucketName + "' contains objects.");
+					returnString = "notempty";
+                }
+            }
+        }
+		
+		
+		return returnString;
+
+	}
+
+    public static boolean doesBucketExist(S3Client s3Client, String bucketName) {
+        try {
+			
+            // Try listing objects (small request to check existence)
+            s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).maxKeys(1).build());
+            return true; // If no exception, bucket exists
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                return false; // Bucket does not exist
+            } else {
+                throw e; // Other errors (like permission issues)
+            }
+        }
+    }
+
+    public static boolean isBucketEmpty(S3Client s3Client, String bucketName) {
+		
+        ListObjectsV2Request listReq = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .maxKeys(1) // Fetch only 1 object to check existence
+                .build();
+
+        ListObjectsV2Response listRes = s3Client.listObjectsV2(listReq);
+        return listRes.contents().isEmpty(); // Returns true if bucket is empty
+    }
 
 	
 	@JavaScriptMethod
