@@ -1249,7 +1249,7 @@ function showClientSelection() {
 									WebBinderyFrontEndDecision: "please make a choice",
 									WebFrontEndDecision: "please make a choice",
 									binderyfrontendVersionDecision: "please make a choice",
-									webfrontendVersionDecision: "please make a valid choice (Please reach out to DevOps Team for a major web upgrade)",
+									webfrontendVersionDecision: "please make a valid choice (Please reach out to SRE Team for a major web upgrade)",
 									njStartStepDecision: "please make a choice",
 									datetimepicker: {
 										required: "please schedule this deployment/activity",
@@ -1540,7 +1540,43 @@ function showClientSelection() {
 								
 								return this.optional(element) || (currentVersion == futureVersion);
 								
-							}, "Please reach out to DevOps Team for a major web upgrade");
+							}, "Please reach out to SRE Team for a major web upgrade");
+							
+														
+							
+							function CheckForV7_10_0()
+							{
+							
+								var value = Q(this).val();
+								
+								var versionRegex = /^v(\d+)\.(\d+)\.(\d+)$/;
+								var match = value.match(versionRegex);
+
+								if (match) 
+								{
+									var options = {zeroExtend: true};
+									var cleanedVersion = value;
+									if (!(cleanedVersion.indexOf("redisIncrease") == -1)) {cleanedVersion = cleanedVersion.split("_")[2]};
+									var parsedShortWebVersion = (cleanedVersion.replace('v','').replace('V','').split(".")[0] + "." + cleanedVersion.replace('v','').replace('V','').split(/[._-]/)[1] + "." + cleanedVersion.replace('v','').replace('V','').split(/[._-]/)[2]).replace('undefined',0);
+
+
+									// Show warning for versions >= v7.10.0
+									if (versionCompare(parsedShortWebVersion, "7.10.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "7.10.0", options) === 0)
+									{
+										var S3bucketToCheck = "qdw-web-" + Q("#clientAcronym").val() + "-" + Q("#environment").val().toLowerCase();
+										
+										Q("#versionWarning").text("⚠️ Please make sure S3 " + S3bucketToCheck + " bucket is non-existing or empty. Otherwise, web deployment will fail.").show();
+									} 
+									else 
+									{
+										Q("#versionWarning").hide();
+									}
+								} else 
+								{
+									Q("#versionWarning").hide();
+								}
+							
+							}
 							
 							
 							Q("#delete").click(function(){
@@ -1914,6 +1950,7 @@ function showClientSelection() {
 							Q("#EnvDecision").change(CheckEnvDecision);
 							Q("#WebBinderyFrontEndDecision").change(CheckWebBinderyFrontEndDecision);
 							Q("#WebFrontEndDecision").change(CheckWebFrontEndDecision);
+							Q("#webfrontendVersionDecision").change(CheckForV7_10_0);
 							
 							
 							Q("#startcrjob").change(function(){
@@ -2898,25 +2935,118 @@ function showClientSelection() {
 											splitString = splitString.toLowerCase().replace('v', '').split(".");
 											var futureVersion = parseInt(splitString[0], 10);
 
+											
 											if (currentVersion == futureVersion)
 											{
 											
-												Q("#webVersion").val(Q("#web_version").val());
-												Q("#dialogTitle").text("Web deploy " + Q("#clientAcronym").val() + " to " + Q("#environment").val() + " for web " + Q("#webVersion").val() + " &#x2192; " + Q("#activeServer").val());
-												Q("#dialogTitle").css("background-color", "#d0f781");
-												
-												if (binderyFrontendExists)
+												var options = {zeroExtend: true};
+												var cleanedVersion = Q("#web_version").val();
+												if (!(cleanedVersion.indexOf("redisIncrease") == -1)) {cleanedVersion = cleanedVersion.split("_")[2]};
+												var parsedShortWebVersion = (cleanedVersion.replace('v','').replace('V','').split(".")[0] + "." + cleanedVersion.replace('v','').replace('V','').split(/[._-]/)[1] + "." + cleanedVersion.replace('v','').replace('V','').split(/[._-]/)[2]).replace('undefined',0);
+
+												if (versionCompare(parsedShortWebVersion, "7.10.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "7.10.0", options) === 0)
 												{
-													
-													Q("#WebBinderyFrontEndLabelQuestion").text(" Do you want to also upgrade bindery frontend as part of this web deployment");
-													Q("#web-bindery-frontendLabel").text("Bindery frontend version currently deployed");
-													Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
-													Q("#current-bindery-frontend-version").show();
-													Q("#optional-web-bindery-frontend").show();
+												
+												
+													//alert("right before runS3Check call");
+
+													console.log("🟡 Calling runS3Check...");
+
+													Q.when(runS3Check()).then(function() {
+														console.log("🟢 Finished runS3Check...");
+											
+														var S3bucketToCheck = "qdw-web-" + Q("#clientAcronym").val() + "-" + Q("#environment").val().toLowerCase();
+														
+														if (Q("#S3checkOutcome").val() == "notexists")
+														{
+															console.log("🟡 notexists case");
+															Q("#dialog3text").text(S3bucketToCheck + " bucket does not exist. Proceeding...");
+														}
+														else if (Q("#S3checkOutcome").val() == "empty")
+														{
+															console.log("🟡 empty case");
+															Q("#dialog3text").text(S3bucketToCheck + " bucket is empty. Proceeding...");
+															
+														}
+														else if (Q("#S3checkOutcome").val() == "notempty")
+														{
+															console.log("🟡 notempty case");
+															Q("#dialog3text").text(S3bucketToCheck + " bucket is not empty. Aborting...");
+														}
+														else
+														{
+															console.log("🟡 failure case");
+															Q("#dialog3text").text(S3bucketToCheck + " failed to be checked. Aborting...");
+														}
+														
+														
+														
+														if (Q("#S3checkOutcome").val() == "notempty")
+														{
+														
+															Q("#optional-web-bindery-frontend").hide();
+												
+															Q("#overlay").hide();
+															Q("#dialog").hide();
+														
+															Q("#dialog3").dialog("option","title","Warning");
+															Q("#dialog3text").text(S3bucketToCheck + " is not empty. Please make sure S3 " + S3bucketToCheck + " bucket is non-existing or empty. Otherwise, web deployment will fail.");
+															Q("#dialog3").dialog("open");
+														
+														}
+														else
+														{
+														
+															Q("#webVersion").val(Q("#web_version").val());
+															Q("#dialogTitle").text("Web deploy " + Q("#clientAcronym").val() + " to " + Q("#environment").val() + " for web " + Q("#webVersion").val() + " &#x2192; " + Q("#activeServer").val());
+															Q("#dialogTitle").css("background-color", "#d0f781");
+															
+															if (binderyFrontendExists)
+															{
+																
+																Q("#WebBinderyFrontEndLabelQuestion").text(" Do you want to also upgrade bindery frontend as part of this web deployment");
+																Q("#web-bindery-frontendLabel").text("Bindery frontend version currently deployed");
+																Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
+																Q("#current-bindery-frontend-version").show();
+																Q("#optional-web-bindery-frontend").show();
+															}
+															else
+															{
+																Q("#optional-web-bindery-frontend").hide();
+															}
+														
+														}
+	
+														
+														
+													}).fail(function(error) {
+														console.error("❌ Error:", error);
+													});
+
+
+
+												
 												}
 												else
 												{
-													Q("#optional-web-bindery-frontend").hide();
+											
+													Q("#webVersion").val(Q("#web_version").val());
+													Q("#dialogTitle").text("Web deploy " + Q("#clientAcronym").val() + " to " + Q("#environment").val() + " for web " + Q("#webVersion").val() + " &#x2192; " + Q("#activeServer").val());
+													Q("#dialogTitle").css("background-color", "#d0f781");
+													
+													if (binderyFrontendExists)
+													{
+														
+														Q("#WebBinderyFrontEndLabelQuestion").text(" Do you want to also upgrade bindery frontend as part of this web deployment");
+														Q("#web-bindery-frontendLabel").text("Bindery frontend version currently deployed");
+														Q("#web-bindery-frontend").val(Q("#binderyFrontendVersion").val());
+														Q("#current-bindery-frontend-version").show();
+														Q("#optional-web-bindery-frontend").show();
+													}
+													else
+													{
+														Q("#optional-web-bindery-frontend").hide();
+													}
 												}
 											
 											}
@@ -2929,7 +3059,7 @@ function showClientSelection() {
 												Q("#dialog").hide();
 												
 												Q("#dialog3").dialog("option","title","Error");
-												Q("#dialog3text").text("Please reach out to DevOps Team for a major upgrade");
+												Q("#dialog3text").text("Please reach out to SRE Team for a major upgrade");
 												Q("#dialog3").dialog("open");
 											
 											}
@@ -3200,6 +3330,119 @@ function showClientSelection() {
 
 						
 						}
+						
+						
+						/*
+						function determineS3bucketExistence()
+						{
+						
+							//Check S3 bucket
+							var response13 = "";
+							EnvDashViewProxy.checkForS3bucket(Q("#clientAcronym").val(),Q("#environment").val(), function(t) {
+								 response13 = t.responseObject();
+								 
+								
+								 if (response13.indexOf("failed") == -1)
+								 {
+									
+									Q("#dialog3").dialog("option","title","Debug");
+									Q("#dialog3text").text(response13);
+									Q("#dialog3").dialog("open");
+									
+									
+									
+									Q("#S3checkOutcome").val(response13);
+									alert("alert1 " + Q("#S3checkOutcome").val());
+																		
+								 }
+								 else
+								 {
+									
+									Q("#dialog3").dialog("option","title","Error");
+									Q("#dialog3text").text(response13);
+									Q("#dialog3").dialog("open");
+									
+									Q("#S3checkOutcome").val(response13);
+								 }
+								 
+								 
+							});
+							
+							alert("alert2 " + Q("#S3checkOutcome").val());
+							
+						
+						}
+						
+						*/
+						
+						
+						
+						/******start*********working code************************/
+						
+						function checkS3bucket(clientAcronym, environment) {
+							var deferred = Q.Deferred(); // jQuery Deferred (Promise)
+
+							console.log("🟡 Calling EnvDashViewProxy.checkForS3bucket...");
+
+							try {
+								EnvDashViewProxy.checkForS3bucket(clientAcronym, environment, function(t) {
+									console.log("🟢 Inside callback of checkS3bucket...");
+									let response = t.responseObject();
+									console.log("🟢 Received response:", response);
+
+									if (response !== undefined &amp;&amp; response !== null) {
+										deferred.resolve(response);  // ✅ Resolve jQuery Promise
+									} else {
+										deferred.reject("❌ Failed to fetch S3 bucket details.");
+									}
+								});
+							} catch (error) {
+								deferred.reject(error);
+							}
+
+							return deferred.promise(); // ✅ Return the jQuery Promise
+						}
+
+						
+						function runS3Check() {
+							var deferred = Q.Deferred(); // jQuery Deferred
+
+							console.log("🟡 runS3Check started...");
+
+							checkS3bucket(Q("#clientAcronym").val(), Q("#environment").val())
+								.then(function(response13) {
+									console.log("🟢 After awaiting checkS3bucket, response:", response13);
+
+									if (response13.indexOf("failed") == -1) {
+										console.log("✅ S3 check passed");
+										//Q("#dialog3").dialog("option", "title", "Debug");
+										//Q("#dialog3text").text(response13);
+										//Q("#dialog3").dialog("open");
+										Q("#S3checkOutcome").val(response13);
+										//alert("alert1 " + Q("#S3checkOutcome").val());
+									} else {
+										console.log("❌ S3 check failed");
+										//Q("#dialog3").dialog("option", "title", "Error");
+										//Q("#dialog3text").text(response13);
+										//Q("#dialog3").dialog("open");
+										Q("#S3checkOutcome").val(response13);
+									}
+
+									deferred.resolve(); // ✅ Ensure `runS3Check()` resolves after completing
+								})
+								.fail(function(error) {
+									console.error("❌ runS3Check failed:", error);
+									alert("❌ Error fetching S3 bucket details.");
+									deferred.reject(error);
+								});
+
+							return deferred.promise(); // ✅ Return the jQuery Promise
+						}
+						
+						/*****end********working code*******************************/
+						
+						
+						
 						
 						function getNightlyjobSteps()
 						{
@@ -3574,7 +3817,7 @@ function showClientSelection() {
 									return false;
 								}
 								
-								if (branch == "deploy-7.0")
+								if (branch == "deploy-7.0" || branch == "deploy-7.10")
 								{
 									baseUrl = "/job/qdwWebDockerDeployClientEnvironment_v7";
 								}
@@ -3664,7 +3907,7 @@ function showClientSelection() {
 												return false;
 											}
 											
-											if (branch == "deploy-7.0")
+											if (branch == "deploy-7.0" || branch == "deploy-7.10")
 											{
 												webJob = "qdwWebDockerDeployClientEnvironment_v7";
 											}
@@ -3762,9 +4005,13 @@ function showClientSelection() {
 							{
 								branch = "deploy-6.3";
 							}
-							else if (versionCompare(parsedShortWebVersion, "7.0.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "7.0.0", options) === 0)
+							else if (versionCompare(parsedShortWebVersion, "7.10.0", options) &lt; 0 &amp;&amp; (versionCompare(parsedShortWebVersion, "7.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "7.0", options) === 0))
 							{
 								branch = "deploy-7.0";
+							}
+							else if (versionCompare(parsedShortWebVersion, "7.10.0", options) &gt; 0 || versionCompare(parsedShortWebVersion, "7.10.0", options) === 0)
+							{
+								branch = "deploy-7.10";
 							}
 							else
 							{
@@ -4026,6 +4273,7 @@ function showClientSelection() {
 				</j:forEach>
 			</code>	
 		</select>
+		<div id="versionWarning" style="color: orange; display: none;"></div>
 	</div>	
 
 
@@ -4223,6 +4471,8 @@ function showClientSelection() {
 	<input type="hidden" id="activeDB" value=""/>
 	<input type="hidden" id="activeServer" value=""/>
 	<input type="hidden" id="replicaServer" value=""/>
+	<input type="hidden" id="S3checkOutcome" value=""/>
+	
 	
 </form>
 <div id="dialog3" title="Title place holder" style="display:none; font-size: large;">
