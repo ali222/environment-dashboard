@@ -78,6 +78,9 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 
+//Needed for https://www.jenkins.io/security/advisory/2022-03-15/#SECURITY-2252
+import hudson.Util;
+
 
 /**
  * Class to provide build wrapper for Dashboard.
@@ -807,15 +810,17 @@ public class EnvDashboardView extends View {
     }
 
     public String getEnvOrder() {
-        return Util.escape(envOrder);
+		return envOrder;
+        //return Util.escape(this.envOrder);
     }
 
     public void setEnvOrder(final String envOrder) {
-        this.envOrder = Util.escape(envOrder);
+		this.envOrder = envOrder;
     }
 
     public String getCompOrder() {
-        return compOrder;
+		return compOrder;
+        //return Util.escape(this.compOrder);
     }
 
     public String getBetaCustomers() {
@@ -835,7 +840,7 @@ public class EnvDashboardView extends View {
     }
 
     public void setCompOrder(final String compOrder) {
-        this.compOrder = compOrder;
+		this.compOrder = compOrder;
     }
 
     public void setBetaCustomers(final String betaCustomers) {
